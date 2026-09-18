@@ -3,18 +3,23 @@ import { useNavigate, Link } from 'react-router-dom';
 import {
   Smartphone, Apple, ArrowLeft, Check, AlertTriangle,
   Share2, PlusSquare, Sparkles, ShieldCheck, Settings,
-  ExternalLink, HelpCircle
+  ExternalLink, HelpCircle, Compass, Globe, MoreHorizontal
 } from 'lucide-react';
 import pwaInstallManager from '../services/pwaInstallManager.js';
 
 export default function NotificationGuide() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('android');
+  const [iosBrowser, setIosBrowser] = useState('safari');
 
   useEffect(() => {
     const plat = pwaInstallManager.platform || 'android';
+    const browser = pwaInstallManager.detectBrowser();
     if (plat === 'ios') {
       setActiveTab('ios');
+      if (browser.isChrome) {
+        setIosBrowser('chrome');
+      }
     } else {
       setActiveTab('android');
     }

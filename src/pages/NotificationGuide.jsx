@@ -139,7 +139,7 @@ export default function NotificationGuide() {
               <div className="space-y-2 text-xs text-slate-700 dark:text-zinc-300">
                 <div className="p-2.5 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30 space-y-1">
                   <strong className="text-slate-900 dark:text-white block">
-                    🔊 സ്ക്രീൻ ഓഫായിരിക്കുമ്പോൾ വലിയ സൈറൺ തുടർച്ചയായി അടിക്കില്ല
+                    സ്ക്രീൻ ഓഫായിരിക്കുമ്പോൾ വലിയ സൈറൺ തുടർച്ചയായി അടിക്കില്ല
                   </strong>
                   <p className="text-[11px] text-slate-600 dark:text-zinc-300 leading-relaxed">
                     സ്ക്രീൻ ഓഫായിരിക്കുമ്പോൾ സാധാരണ മെസ്സേജ് ടോണും വൈബ്രേഷനും മാത്രമേ അടിക്കൂ. നോട്ടിഫിക്കേഷനിൽ തൊട്ട് ആപ്പ് തുറക്കുമ്പോഴാണ് ഉച്ചത്തിലുള്ള സൈറൺ ശബ്ദം കേൾക്കുന്നത്. (ആൻഡ്രോയിഡ് സുരക്ഷാ നിയമം കാരണമാണിത്).
@@ -151,7 +151,7 @@ export default function NotificationGuide() {
 
                 <div className="p-2.5 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30 space-y-1">
                   <strong className="text-slate-900 dark:text-white block">
-                    🔋 ബാറ്ററി സേവർ (Battery Saver) നോട്ടിഫിക്കേഷൻ വൈകിപ്പിച്ചേക്കാം
+                    ബാറ്ററി സേവർ (Battery Saver) നോട്ടിഫിക്കേഷൻ വൈകിപ്പിച്ചേക്കാം
                   </strong>
                   <p className="text-[11px] text-slate-600 dark:text-zinc-300 leading-relaxed">
                     Samsung, Redmi, OnePlus ഫോണുകളിൽ ബാറ്ററി സേവർ കാരണം മെസ്സേജ് വരാൻ വൈകിയേക്കാം. ഇത് ഒഴിവാക്കാൻ താഴെ പറയുന്ന സ്റ്റെപ്പുകൾ ചെയ്യുക.
@@ -375,14 +375,11 @@ export default function NotificationGuide() {
                 </div>
 
                 {/* Important tip for Chrome users */}
-                <div className="p-3 bg-amber-50/70 dark:bg-amber-950/30 rounded-xl border border-amber-200/60 dark:border-amber-900/40 text-[11px] text-amber-900 dark:text-amber-200 flex items-start gap-2">
-                  <Sparkles className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
-                  <div>
-                    <strong className="block">ക്രോമിൽ "Add to Home Screen" കാണുന്നില്ലെങ്കിൽ:</strong>
-                    <span>
-                      ചില ഐഫോൺ വേർഷനുകളിൽ ക്രോം മെനുവിൽ ഇത് ഉണ്ടാകില്ല. അങ്ങനെയാണെങ്കിൽ ക്രോമിലെ 3 കുത്തുകളിൽ (Menu) ക്ലിക്ക് ചെയ്ത് <strong>"Open in Safari"</strong> നൽകുക, തുടർന്ന് സഫാരി വഴി ഹോം സ്ക്രീനിലേക്ക് ആഡ് ചെയ്യാം.
-                    </span>
-                  </div>
+                <div className="p-3 bg-amber-50/70 dark:bg-amber-950/30 rounded-xl border border-amber-200/60 dark:border-amber-900/40 text-[11px] text-amber-900 dark:text-amber-200">
+                  <strong className="block mb-0.5">ക്രോമിൽ "Add to Home Screen" കാണുന്നില്ലെങ്കിൽ:</strong>
+                  <p className="m-0 leading-relaxed">
+                    ചില ഐഫോൺ വേർഷനുകളിൽ ക്രോം മെനുവിൽ ഇത് ഉണ്ടാകില്ല. അങ്ങനെയാണെങ്കിൽ ക്രോമിലെ 3 കുത്തുകളിൽ (Menu) ക്ലിക്ക് ചെയ്ത് <strong>"Open in Safari"</strong> നൽകുക, തുടർന്ന് സഫാരി വഴി ഹോം സ്ക്രീനിലേക്ക് ആഡ് ചെയ്യാം.
+                  </p>
                 </div>
               </div>
             )}

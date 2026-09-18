@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useAppStore } from '../store/appStore.js';
-import { useNavigate } from 'react-router-dom';
-import { Bell, Siren, Award, CheckSquare, Sparkles, Inbox, ArrowLeft, MapPin } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Bell, Siren, Award, CheckSquare, Sparkles, Inbox, ArrowLeft, MapPin, Smartphone, ChevronRight } from 'lucide-react';
 
 export default function Notifications() {
   const { 
@@ -94,6 +94,30 @@ export default function Notifications() {
           </button>
         )}
       </div>
+
+      {/* Device & Notification Guide Banner */}
+      <Link
+        to="/notifications/guide"
+        className="mb-5 p-3.5 rounded-2xl bg-gradient-to-r from-red-500/10 via-rose-500/5 to-transparent border border-red-200/80 dark:border-red-900/40 flex items-center justify-between gap-3 group hover:border-red-300 dark:hover:border-red-800 transition-all shadow-xs"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-8 h-8 rounded-xl bg-red-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <Smartphone className="w-4 h-4" />
+          </div>
+          <div className="min-w-0 text-left">
+            <p className="text-xs font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-1.5">
+              <span>Android & iOS Notification Guide</span>
+              <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400">
+                HELP
+              </span>
+            </p>
+            <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate mt-0.5">
+              What works on your phone, background audio siren limits & setup steps
+            </p>
+          </div>
+        </div>
+        <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
+      </Link>
 
       {/* Notifications List */}
       {notifications.length === 0 ? (

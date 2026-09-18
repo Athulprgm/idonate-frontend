@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAppStore } from '../store/appStore.js';
 import { useAuthStore } from '../store/authStore.js';
 import {
   Moon, Sun, BellRing, Smartphone, KeyRound, Mail, ChevronRight,
-  Settings as SettingsIcon, BellOff, AlertTriangle, CheckCircle2, Download
+  Settings as SettingsIcon, BellOff, AlertTriangle, CheckCircle2, Download,
+  HelpCircle
 } from 'lucide-react';
 import AccountSecurityModal from '../components/AccountSecurityModal.jsx';
 import api from '../store/api.js';
@@ -291,6 +293,28 @@ export default function Settings() {
           )}
 
           <div className="border-t border-slate-100 my-1 mt-3" />
+
+          {/* Notification & Device Guide Link */}
+          <Link
+            to="/notifications/guide"
+            className="w-full flex items-center gap-4 py-3 cursor-pointer group hover:bg-slate-50/80 -mx-1 px-1 rounded-xl transition-colors"
+          >
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-red-50 text-red-600">
+              <HelpCircle className="w-4 h-4" />
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-sm font-semibold text-gray-900 leading-tight flex items-center gap-1.5">
+                <span>Notification & Device Guide</span>
+                <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-emerald-100 text-emerald-700">Android & iOS</span>
+              </p>
+              <p className="text-xs text-gray-400 mt-0.5 truncate">
+                What works vs limitations, audio siren restrictions & battery fix
+              </p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
+          </Link>
+
+          <div className="border-t border-slate-100 my-1" />
 
           <SettingRow
             id="sms-alerts-row"

@@ -8,6 +8,7 @@ const platformLinks = [
   { to: '/donor/search', label: 'Find Donors' },
   { to: '/requests', label: 'Blood Requests' },
   { to: '/volunteer-directory', label: 'Directory' },
+  { to: '/notification-guide', label: 'Notification Guide' },
 ];
 
 const companyLinks = [

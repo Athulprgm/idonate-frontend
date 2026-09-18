@@ -65,7 +65,7 @@ export default function DownloadApp() {
 
   return (
     <div className="min-h-screen bg-[#fbfbfd] text-slate-900 font-sans antialiased pb-24">
-      
+
       {/* ── Apple / Google Minimalist Hero ── */}
       <section className="pt-16 pb-12 px-6 max-w-2xl mx-auto text-center">
         {/* App Squircle Icon */}
@@ -95,7 +95,7 @@ export default function DownloadApp() {
 
         {/* ── CARD 1: PWA WEB APP (AVAILABLE NOW) ── */}
         <div className="bg-white rounded-3xl border border-slate-200/70 p-7 sm:p-9 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-6">
-          
+
           {/* Header Row */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -124,8 +124,8 @@ export default function DownloadApp() {
                   {isInstalled
                     ? 'Installed on this device ✓'
                     : installing
-                    ? 'Opening...'
-                    : 'Install Web App'}
+                      ? 'Opening...'
+                      : 'Install Web App'}
                 </span>
               </button>
             </div>
@@ -173,28 +173,26 @@ export default function DownloadApp() {
           <div className="pt-2 border-t border-slate-100 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-slate-500">Installation Guide</span>
-              
+
               {/* iOS / Google style Pill Segmented Control */}
               <div className="inline-flex p-1 bg-slate-100 rounded-full">
                 <button
                   type="button"
                   onClick={() => setActiveTab('android')}
-                  className={`px-3.5 py-1 text-xs font-medium rounded-full transition-all cursor-pointer ${
-                    activeTab === 'android'
+                  className={`px-3.5 py-1 text-xs font-medium rounded-full transition-all cursor-pointer ${activeTab === 'android'
                       ? 'bg-white text-slate-900 shadow-xs font-semibold'
                       : 'text-slate-500 hover:text-slate-800'
-                  }`}
+                    }`}
                 >
                   Android
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab('ios')}
-                  className={`px-3.5 py-1 text-xs font-medium rounded-full transition-all cursor-pointer ${
-                    activeTab === 'ios'
+                  className={`px-3.5 py-1 text-xs font-medium rounded-full transition-all cursor-pointer ${activeTab === 'ios'
                       ? 'bg-white text-slate-900 shadow-xs font-semibold'
                       : 'text-slate-500 hover:text-slate-800'
-                  }`}
+                    }`}
                 >
                   iPhone
                 </button>
@@ -218,11 +216,10 @@ export default function DownloadApp() {
                     <button
                       type="button"
                       onClick={() => setIosBrowser('safari')}
-                      className={`px-3 py-1 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
-                        iosBrowser === 'safari'
+                      className={`px-3 py-1 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 cursor-pointer ${iosBrowser === 'safari'
                           ? 'bg-white text-blue-600 shadow-xs font-semibold'
                           : 'text-slate-500 hover:text-slate-800'
-                      }`}
+                        }`}
                     >
                       <Compass className="w-3.5 h-3.5" />
                       Safari
@@ -230,11 +227,10 @@ export default function DownloadApp() {
                     <button
                       type="button"
                       onClick={() => setIosBrowser('chrome')}
-                      className={`px-3 py-1 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
-                        iosBrowser === 'chrome'
+                      className={`px-3 py-1 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 cursor-pointer ${iosBrowser === 'chrome'
                           ? 'bg-white text-amber-600 shadow-xs font-semibold'
                           : 'text-slate-500 hover:text-slate-800'
-                      }`}
+                        }`}
                     >
                       <Globe className="w-3.5 h-3.5" />
                       Chrome
@@ -288,7 +284,7 @@ export default function DownloadApp() {
 
         {/* ── CARD 2: NATIVE ANDROID APP (UNDER DEVELOPMENT) ── */}
         <div className="bg-white rounded-3xl border border-slate-200/70 p-7 sm:p-9 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-4">
-          
+
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-medium mb-1.5">

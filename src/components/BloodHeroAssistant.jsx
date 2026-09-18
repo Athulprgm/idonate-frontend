@@ -5,10 +5,11 @@ import {
   X,
   Search,
   Droplets,
-  Send,
   RotateCcw,
   ChevronRight,
-  ShieldCheck
+  ShieldCheck,
+  Sparkles,
+  ArrowUp
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore.js';
 import CommunityChoiceModal from './CommunityChoiceModal.jsx';
@@ -199,41 +200,43 @@ export default function BloodHeroAssistant() {
             />
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              initial={{ opacity: 0, scale: 0.96, y: 14 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              exit={{ opacity: 0, scale: 0.96, y: 14 }}
               transition={{ type: 'spring', damping: 28, stiffness: 340 }}
-              className="fixed inset-x-3 bottom-3 top-14 sm:inset-auto sm:bottom-6 sm:right-6 z-[9999] w-auto sm:w-[385px] sm:h-[590px] sm:max-h-[calc(100vh-48px)] rounded-3xl bg-white shadow-2xl shadow-slate-900/20 border border-slate-100 overflow-hidden flex flex-col select-text"
+              className="fixed inset-x-3 bottom-3 top-14 sm:inset-auto sm:bottom-6 sm:right-6 z-[9999] w-auto sm:w-[395px] sm:h-[600px] sm:max-h-[calc(100vh-48px)] rounded-[32px] bg-white shadow-[0_24px_64px_-12px_rgba(0,0,0,0.16),0_0_1px_1px_rgba(0,0,0,0.06)] border border-slate-200/60 overflow-hidden flex flex-col select-text"
             >
-              {/* Minimal Clean Header */}
-              <div className="bg-red-600 px-3.5 py-2.5 text-white flex items-center justify-between shrink-0 shadow-xs select-none">
-                {/* Left: Avatar + Info */}
-                <div className="flex items-center gap-2.5">
+              {/* Premium Minimal Frosted Header */}
+              <div className="bg-white/95 backdrop-blur-xl px-4 py-3 border-b border-slate-100 flex items-center justify-between shrink-0 select-none">
+                {/* Left: Avatar + Identity */}
+                <div className="flex items-center gap-3">
                   <div className="relative">
-                    <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-white/80 shadow-xs flex items-center justify-center bg-white">
-                      <img src="/hemo_avatar.png" alt="Hemo" className="w-full h-full object-cover" />
+                    <div className="w-9 h-9 rounded-full bg-slate-50 p-0.5 ring-1 ring-slate-200/80 shadow-xs flex items-center justify-center overflow-hidden">
+                      <img src="/hemo_avatar.png" alt="Hemo" className="w-full h-full object-cover rounded-full" />
                     </div>
-                    <span className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-400 border border-white rounded-full" />
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 ring-2 ring-white rounded-full" />
                   </div>
 
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <h3 className="text-[13px] font-bold tracking-tight text-white leading-tight">Hemo</h3>
-                      <span className="w-1 h-1 rounded-full bg-emerald-300" />
-                      <span className="text-[10px] text-red-100/90 font-medium leading-none">Online</span>
+                      <h3 className="text-sm font-semibold tracking-tight text-slate-900 leading-none">Hemo</h3>
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-50 text-red-600 text-[10px] font-semibold border border-red-100/70">
+                        <Sparkles className="w-2.5 h-2.5" />
+                        <span>AI</span>
+                      </span>
                     </div>
-                    <p className="text-[10.5px] text-red-100/80 font-normal leading-tight mt-0.5">JeevaLink</p>
+                    <p className="text-[11px] text-slate-400 font-normal leading-tight mt-1">JeevaLink Assistant</p>
                   </div>
                 </div>
 
                 {/* Right: Actions */}
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 text-slate-400">
                   <button
                     type="button"
                     onClick={handleClearChat}
                     title="Reset Chat"
                     aria-label="Reset Chat"
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/15 active:scale-95 transition-all cursor-pointer"
+                    className="w-8 h-8 rounded-full flex items-center justify-center hover:text-slate-700 hover:bg-slate-100 active:scale-95 transition-all cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                   </button>
@@ -242,7 +245,7 @@ export default function BloodHeroAssistant() {
                     onClick={() => setIsOpen(false)}
                     title="Close"
                     aria-label="Close Chat"
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/15 active:scale-95 transition-all cursor-pointer"
+                    className="w-8 h-8 rounded-full flex items-center justify-center hover:text-slate-700 hover:bg-slate-100 active:scale-95 transition-all cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -250,23 +253,25 @@ export default function BloodHeroAssistant() {
               </div>
 
               {/* Chatbox Messages Body */}
-              <div className="p-4 space-y-3.5 overflow-y-auto overscroll-contain flex-1 text-xs bg-slate-50/70 scrollbar-thin">
+              <div className="p-4 space-y-3 overflow-y-auto overscroll-contain flex-1 text-xs bg-[#fbfbfd] scrollbar-thin">
                 {/* Quick Topic Prompts if few messages */}
                 {messages.length <= 2 && (
-                  <div className="space-y-1.5 mb-2">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">
-                      Suggested Topics
-                    </p>
+                  <div className="space-y-2 mb-2">
+                    <div className="flex items-center justify-between px-1">
+                      <span className="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">
+                        Suggested Topics
+                      </span>
+                    </div>
                     <div className="grid grid-cols-1 gap-1.5">
                       {SUGGESTED_PROMPTS.map((prompt, pIdx) => (
                         <button
                           key={pIdx}
                           type="button"
                           onClick={() => handleSendMessage(prompt.query)}
-                          className="w-full text-left p-2.5 rounded-xl bg-white hover:bg-red-50/50 active:bg-red-100/50 border border-slate-200/70 hover:border-red-200 text-slate-700 hover:text-red-700 font-medium text-[11.5px] transition-all flex items-center justify-between group cursor-pointer shadow-2xs"
+                          className="w-full text-left px-3.5 py-2.5 rounded-2xl bg-white hover:bg-slate-50 active:bg-slate-100 border border-slate-200/70 hover:border-slate-300 text-slate-700 hover:text-slate-900 text-xs font-medium transition-all flex items-center justify-between group cursor-pointer shadow-2xs"
                         >
                           <span className="truncate">{prompt.label}</span>
-                          <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-red-500 transition-transform group-hover:translate-x-0.5 shrink-0 ml-2" />
+                          <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-600 transition-transform group-hover:translate-x-0.5 shrink-0 ml-2" />
                         </button>
                       ))}
                     </div>
@@ -283,16 +288,16 @@ export default function BloodHeroAssistant() {
                       <img
                         src="/hemo_avatar.png"
                         alt="Hemo"
-                        className="w-6 h-6 rounded-full object-cover border border-red-200 shrink-0 mb-1"
+                        className="w-6 h-6 rounded-full object-cover ring-1 ring-slate-200 shrink-0 mb-1"
                       />
                     )}
                     <div
                       className={`max-w-[85%] p-3.5 rounded-2xl ${
                         msg.sender === 'user'
-                          ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white font-medium rounded-br-xs shadow-xs'
+                          ? 'bg-slate-900 text-white font-normal rounded-tr-xs shadow-xs text-[12.5px]'
                           : msg.isError
-                            ? 'bg-rose-50 text-rose-900 border border-rose-200 font-medium rounded-bl-xs'
-                            : 'bg-white text-slate-800 border border-slate-200/80 rounded-bl-xs shadow-2xs'
+                            ? 'bg-rose-50 text-rose-900 border border-rose-200 font-medium rounded-tl-xs'
+                            : 'bg-white text-slate-800 border border-slate-200/70 rounded-tl-xs shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
                       }`}
                     >
                       <div className="text-[12.5px] whitespace-pre-wrap leading-relaxed">
@@ -304,13 +309,13 @@ export default function BloodHeroAssistant() {
                         <div className="mt-3 flex gap-2 pt-2 border-t border-slate-100">
                           <button
                             onClick={() => handleLanguageSelect('Malayalam')}
-                            className="px-3 py-1 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 rounded-lg text-[11px] font-bold transition-all cursor-pointer shadow-2xs"
+                            className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-full text-[11px] font-semibold transition-all cursor-pointer"
                           >
                             മലയാളം
                           </button>
                           <button
                             onClick={() => handleLanguageSelect('English')}
-                            className="px-3 py-1 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-bold transition-all cursor-pointer shadow-2xs"
+                            className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-full text-[11px] font-semibold transition-all cursor-pointer"
                           >
                             English
                           </button>
@@ -326,13 +331,13 @@ export default function BloodHeroAssistant() {
                     <img
                       src="/hemo_avatar.png"
                       alt="Hemo"
-                      className="w-6 h-6 rounded-full object-cover border border-red-200 shrink-0 mb-1"
+                      className="w-6 h-6 rounded-full object-cover ring-1 ring-slate-200 shrink-0 mb-1"
                     />
-                    <div className="bg-white border border-slate-200/80 rounded-2xl rounded-bl-xs px-3.5 py-2.5 shadow-2xs flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-bounce [animation-delay:-0.3s]" />
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-bounce [animation-delay:-0.15s]" />
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-bounce" />
-                      <span className="text-[11px] font-medium text-slate-500 ml-1">Hemo is typing...</span>
+                    <div className="bg-white border border-slate-200/70 rounded-2xl rounded-tl-xs px-3.5 py-2.5 shadow-2xs flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:-0.3s]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:-0.15s]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" />
+                      <span className="text-[11px] font-medium text-slate-400 ml-1">Hemo is thinking...</span>
                     </div>
                   </div>
                 )}
@@ -341,12 +346,12 @@ export default function BloodHeroAssistant() {
               </div>
 
               {/* Minimal Action Shortcuts Bar */}
-              <div className="px-3 py-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2 shrink-0">
+              <div className="px-3 py-2 bg-white border-t border-slate-100 flex items-center justify-between gap-2 shrink-0">
                 {user?.role === 'user' ? (
                   <button
                     type="button"
                     onClick={() => handleAction('/donor/eligibility')}
-                    className="flex-1 py-1.5 px-2.5 rounded-xl bg-white hover:bg-emerald-50 active:bg-emerald-100 border border-slate-200/70 text-slate-700 hover:text-emerald-700 text-[10.5px] font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
+                    className="flex-1 py-1.5 px-3 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200/60 text-slate-700 hover:text-slate-900 text-xs font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                   >
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                     <span>Eligibility</span>
@@ -355,7 +360,7 @@ export default function BloodHeroAssistant() {
                   <button
                     type="button"
                     onClick={() => handleAction('/donor/search')}
-                    className="flex-1 py-1.5 px-2.5 rounded-xl bg-white hover:bg-red-50 active:bg-red-100 border border-slate-200/70 text-slate-700 hover:text-red-700 text-[10.5px] font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
+                    className="flex-1 py-1.5 px-3 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200/60 text-slate-700 hover:text-slate-900 text-xs font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                   >
                     <Search className="w-3.5 h-3.5 text-red-600" />
                     <span>Find Donors</span>
@@ -364,37 +369,43 @@ export default function BloodHeroAssistant() {
                 <button
                   type="button"
                   onClick={() => handleAction('/requests')}
-                  className="flex-1 py-1.5 px-2.5 rounded-xl bg-white hover:bg-red-50 active:bg-red-100 border border-slate-200/70 text-slate-700 hover:text-red-700 text-[10.5px] font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
+                  className="flex-1 py-1.5 px-3 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200/60 text-slate-700 hover:text-slate-900 text-xs font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                 >
                   <Droplets className="w-3.5 h-3.5 text-red-600" />
                   <span>Blood Requests</span>
                 </button>
               </div>
 
-              {/* Chat Input Form */}
+              {/* Chat Input Capsule */}
               <div className="p-3 border-t border-slate-100 bg-white shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     handleSendMessage();
                   }}
-                  className="flex items-center gap-2"
+                  className="relative flex items-center"
                 >
-                  <input
-                    type="text"
-                    value={inputQuery}
-                    onChange={(e) => setInputQuery(e.target.value)}
-                    placeholder="Ask Hemo about blood donation..."
-                    className="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 focus:bg-white transition-all font-medium"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!inputQuery.trim() || isThinking}
-                    className="p-2.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white rounded-xl transition-all disabled:opacity-35 shadow-sm active:scale-95 cursor-pointer shrink-0"
-                    aria-label="Send message"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
+                  <div className="w-full flex items-center gap-2 bg-slate-100/80 hover:bg-slate-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-slate-900/10 focus-within:border-slate-300 border border-transparent rounded-full pl-4 pr-1.5 py-1.5 transition-all">
+                    <input
+                      type="text"
+                      value={inputQuery}
+                      onChange={(e) => setInputQuery(e.target.value)}
+                      placeholder="Ask Hemo about blood donation..."
+                      className="flex-1 bg-transparent text-xs sm:text-[13px] text-slate-900 placeholder-slate-400 focus:outline-none"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!inputQuery.trim() || isThinking}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+                        inputQuery.trim() && !isThinking
+                          ? 'bg-slate-900 text-white shadow-xs hover:bg-black active:scale-95'
+                          : 'bg-slate-200/60 text-slate-400 cursor-not-allowed'
+                      }`}
+                      aria-label="Send message"
+                    >
+                      <ArrowUp className="w-4 h-4" />
+                    </button>
+                  </div>
                 </form>
               </div>
             </motion.div>

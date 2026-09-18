@@ -8,7 +8,6 @@ import {
   BellRing,
   Zap,
   ShieldCheck,
-  ChevronRight,
   ArrowUpRight,
   Info,
   Compass,

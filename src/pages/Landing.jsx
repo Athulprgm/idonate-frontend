@@ -12,7 +12,10 @@ import {
   Search,
   UserPlus,
   HeartHandshake,
-  CheckCircle2
+  CheckCircle2,
+  Smartphone,
+  Download,
+  Sparkles
 } from "lucide-react";
 import CommunityChoiceModal from "../components/CommunityChoiceModal.jsx";
 
@@ -623,6 +626,43 @@ export default function Landing() {
                 </span>
               </Link>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── MOBILE APP / WEB APP SHOWCASE ────────────────────────────── */}
+      <section className="py-14 bg-slate-50 border-b border-slate-200">
+        <div className="jl-container max-w-5xl mx-auto px-4">
+          <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-10 shadow-sm flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
+            <div className="space-y-3 text-center md:text-left max-w-xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold">
+                <Sparkles className="w-3.5 h-3.5 text-red-600" />
+                <span>Mobile & Web Applications</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                Never Miss a Life-Saving Blood Alert
+              </h2>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                Download the official Jeevalink Web App for real-time lock screen siren alerts (&lt;1 MB size, no store download required). Official Android App coming soon to Google Play!
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full sm:w-auto">
+              <Link
+                to="/download-app"
+                className="w-full sm:w-auto px-6 py-3.5 bg-red-600 hover:bg-red-700 text-white font-black text-sm rounded-2xl transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                <span>Get App / Details</span>
+              </Link>
+              <Link
+                to="/download-app#android-native-section"
+                className="w-full sm:w-auto px-5 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm rounded-2xl transition-all flex items-center justify-center gap-2"
+              >
+                <Smartphone className="w-4 h-4 text-emerald-600" />
+                <span>Android Coming Soon</span>
+              </Link>
+            </div>
           </div>
         </div>
       </section>

@@ -5,6 +5,7 @@ import JeevaLinkLogo from './JeevaLinkLogo.jsx';
 
 const platformLinks = [
   { to: '/', label: 'Home' },
+  { to: '/download-app', label: 'Download App' },
   { to: '/donor/search', label: 'Find Donors' },
   { to: '/requests', label: 'Blood Requests' },
   { to: '/volunteer-directory', label: 'Directory' },

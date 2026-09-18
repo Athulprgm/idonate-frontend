@@ -9,8 +9,6 @@ import {
   X,
   Smartphone,
   ExternalLink,
-  CheckCircle2,
-  Sparkles,
   Info,
 } from 'lucide-react';
 import { usePWAInstall } from '../../hooks/usePWAInstall.js';
@@ -117,15 +115,6 @@ export default function InstallWebAppModal() {
               </div>
 
               <div className="min-w-0 pr-6">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-red-50 dark:bg-red-950/50 text-primary text-[10px] font-black uppercase tracking-wider">
-                    <Sparkles className="w-2.5 h-2.5" />
-                    Official Web App
-                  </span>
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500">
-                    {activeCategory === 'ios' ? ' Apple iOS' : '🤖 Android'}
-                  </span>
-                </div>
                 <h2
                   id="pwa-modal-title"
                   className="text-lg font-black text-slate-900 dark:text-white leading-tight truncate"

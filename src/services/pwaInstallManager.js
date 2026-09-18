@@ -205,14 +205,14 @@ class PWAInstallManager {
     const elapsed = now - data.dismissedAt;
 
     // Cooldown duration based on dismissal count:
-    // 1st dismissal: 7 days
-    // 2nd dismissal: 14 days
-    // 3rd+ dismissal: 30 days
-    let cooldownMs = 7 * 24 * 60 * 60 * 1000;
+    // 1st dismissal: 24 hours
+    // 2nd dismissal: 3 days
+    // 3rd+ dismissal: 7 days
+    let cooldownMs = 24 * 60 * 60 * 1000;
     if (data.dismissCount === 2) {
-      cooldownMs = 14 * 24 * 60 * 60 * 1000;
+      cooldownMs = 3 * 24 * 60 * 60 * 1000;
     } else if (data.dismissCount >= 3) {
-      cooldownMs = 30 * 24 * 60 * 60 * 1000;
+      cooldownMs = 7 * 24 * 60 * 60 * 1000;
     }
 
     return elapsed < cooldownMs;
@@ -229,6 +229,13 @@ class PWAInstallManager {
 
       if (!this.isAppInstalled()) {
         this.setState(PWA_STATE.READY_TO_INSTALL);
+        // If smart trigger was waiting, trigger it immediately
+        if (this.smartTriggerCallback && this.canShowSmartPrompt()) {
+          const cb = this.smartTriggerCallback;
+          this.smartTriggerCallback = null;
+          cb();
+          this.incrementShownCount();
+        }
       }
     });
 
@@ -255,7 +262,7 @@ class PWAInstallManager {
 
   // ─── Smart Trigger Coordination ─────────────────────────────────────────────
 
-  canShowSmartPrompt(currentPath = window.location.pathname) {
+  canShowSmartPrompt(currentPath = typeof window !== 'undefined' ? window.location.pathname : '') {
     // Never show if already installed
     if (this.isAppInstalled()) return false;
 
@@ -268,24 +275,28 @@ class PWAInstallManager {
       return false;
     }
 
-    // Must have a valid installation method
-    if (this.platform === 'ios') {
-      return true; // iOS Safari guide is supported
+    // On mobile (both iOS and Android), automatically show the install prompt
+    if (this.isMobile || this.platform === 'ios' || this.platform === 'android') {
+      return true;
     }
 
-    // On Android/Desktop, must have received beforeinstallprompt
+    // On desktop, must have received beforeinstallprompt
     return Boolean(this.deferredPrompt);
   }
 
-  armSmartTrigger(onTrigger, delayMs = 10000) {
+  armSmartTrigger(onTrigger, delayMs = 3500) {
     if (typeof window === 'undefined' || this.isSmartTriggerArmed) return;
     this.isSmartTriggerArmed = true;
+    this.smartTriggerCallback = onTrigger;
 
-    // Wait initial delay (8-15 seconds recommended; 10s default)
     this.smartTriggerTimeout = setTimeout(() => {
       if (this.canShowSmartPrompt()) {
-        onTrigger();
-        this.incrementShownCount();
+        if (this.smartTriggerCallback) {
+          const cb = this.smartTriggerCallback;
+          this.smartTriggerCallback = null;
+          cb();
+          this.incrementShownCount();
+        }
       }
     }, delayMs);
   }
@@ -295,6 +306,7 @@ class PWAInstallManager {
       clearTimeout(this.smartTriggerTimeout);
       this.smartTriggerTimeout = null;
     }
+    this.smartTriggerCallback = null;
     this.isSmartTriggerArmed = false;
   }
 
@@ -307,8 +319,8 @@ class PWAInstallManager {
     }
 
     if (!this.deferredPrompt) {
-      console.warn('[PWA] No deferred beforeinstallprompt available.');
-      return { outcome: 'unavailable' };
+      console.warn('[PWA] No deferred beforeinstallprompt available. Showing manual steps.');
+      return { outcome: 'manual_steps_needed' };
     }
 
     try {
@@ -358,6 +370,7 @@ class PWAInstallManager {
       canInstall: this.canInstall(),
       isInstalled: this.isAppInstalled(),
       platform: this.platform,
+      isMobile: this.isMobile,
       browser: this.browser,
       hasDeferredPrompt: Boolean(this.deferredPrompt),
     };
@@ -365,7 +378,8 @@ class PWAInstallManager {
 
   canInstall() {
     if (this.isAppInstalled()) return false;
-    if (this.platform === 'ios') return true;
+    // On mobile devices (iOS or Android), installation / home screen add is always supported
+    if (this.isMobile || this.platform === 'ios' || this.platform === 'android') return true;
     return Boolean(this.deferredPrompt);
   }
 

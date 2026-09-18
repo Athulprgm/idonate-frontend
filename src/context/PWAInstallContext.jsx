@@ -19,9 +19,12 @@ export function PWAInstallProvider({ children }) {
   useEffect(() => {
     if (managerState.isInstalled) return;
 
+    // Fast responsive delay: 3s on mobile, 6s on desktop
+    const delay = pwaManager.isMobile ? 3000 : 6000;
+
     pwaManager.armSmartTrigger(() => {
       setIsPromptOpen(true);
-    }, 10000); // 10 seconds delay
+    }, delay);
 
     return () => {
       pwaManager.disarmSmartTrigger();
@@ -73,7 +76,9 @@ export function PWAInstallProvider({ children }) {
     canInstall: managerState.canInstall,
     isInstalled: managerState.isInstalled,
     platform: managerState.platform,
+    isMobile: managerState.isMobile,
     browser: managerState.browser,
+    hasDeferredPrompt: managerState.hasDeferredPrompt,
     installState: managerState.state,
     isPromptOpen,
     isIOSGuideOpen,

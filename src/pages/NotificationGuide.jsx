@@ -213,69 +213,179 @@ export default function NotificationGuide() {
                 <span>ഐഫോൺ ഉപയോക്താക്കൾ നിർബന്ധമായും അറിയേണ്ട കാര്യം</span>
               </div>
               <p className="text-xs text-slate-800 dark:text-zinc-200 font-bold leading-snug">
-                സഫാരി (Safari) ബ്രൗസറിനുള്ളിൽ വെബ്സൈറ്റ് തുറന്നിരുന്നാൽ മാത്രം ഐഫോണിൽ നോട്ടിഫിക്കേഷൻ വരില്ല!
+                ബ്രൗസറിനുള്ളിൽ (Safari / Chrome) വെബ്സൈറ്റ് തുറന്നിരുന്നാൽ മാത്രം ഐഫോണിൽ നോട്ടിഫിക്കേഷൻ വരില്ല!
               </p>
               <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed">
-                ആപ്പിളിന്റെ നിയമപ്രകാരം, JeevaLink ആപ്പ് നിങ്ങളുടെ <strong>ഐഫോൺ ഹോം സ്ക്രീനിലേക്ക് ആഡ് ചെയ്താൽ മാത്രമേ</strong> നോട്ടിഫിക്കേഷൻ ലഭിക്കൂ.
+                ആപ്പിളിന്റെ നിയമപ്രകാരം, iDonate ആപ്പ് നിങ്ങളുടെ <strong>ഐഫോൺ ഹോം സ്ക്രീനിലേക്ക് ആഡ് ചെയ്താൽ മാത്രമേ (Add to Home Screen)</strong> നോട്ടിഫിക്കേഷൻ ലഭിക്കൂ.
               </p>
               <p className="text-[10px] text-slate-500 dark:text-zinc-500">
-                Apple blocks web notifications in regular Safari tabs. You MUST add to Home Screen.
+                Apple requires adding the web app to your Home Screen to enable Web Push alerts.
               </p>
             </div>
 
-            {/* How to setup on iPhone (Step-by-step visual cards) */}
-            <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/80 dark:border-zinc-800 p-4 space-y-3">
-              <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                ഐഫോണിൽ നോട്ടിഫിക്കേഷൻ ഓൺ ആക്കാനുള്ള 3 ഘട്ടങ്ങൾ
-              </h3>
+            {/* Sub-browser selector for iPhone: Safari vs Chrome */}
+            <div className="bg-slate-200/80 dark:bg-zinc-800/80 p-1 rounded-xl flex gap-1">
+              <button
+                type="button"
+                onClick={() => setIosBrowser('safari')}
+                className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  iosBrowser === 'safari'
+                    ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900'
+                }`}
+              >
+                <Compass className="w-3.5 h-3.5" />
+                <span>സഫാരി (Safari)</span>
+              </button>
 
-              <div className="space-y-2.5 text-xs">
-                {/* Step 1 */}
-                <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-100 dark:border-zinc-800">
-                  <div className="w-6 h-6 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shrink-0">
-                    1
+              <button
+                type="button"
+                onClick={() => setIosBrowser('chrome')}
+                className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  iosBrowser === 'chrome'
+                    ? 'bg-white dark:bg-zinc-900 text-amber-600 dark:text-amber-400 shadow-xs'
+                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900'
+                }`}
+              >
+                <Globe className="w-3.5 h-3.5" />
+                <span>ഗൂഗിൾ ക്രോം (Google Chrome)</span>
+              </button>
+            </div>
+
+            {/* ─── SAFARI INSTRUCTIONS ─── */}
+            {iosBrowser === 'safari' && (
+              <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/80 dark:border-zinc-800 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <Compass className="w-4 h-4 text-blue-600" />
+                    <span>സഫാരി വഴി സെറ്റ് ചെയ്യാം (3 ഘട്ടങ്ങൾ)</span>
+                  </h3>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                    Safari Recommended
+                  </span>
+                </div>
+
+                <div className="space-y-2.5 text-xs">
+                  {/* Step 1 */}
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-100 dark:border-zinc-800">
+                    <div className="w-6 h-6 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+                      1
+                    </div>
+                    <div>
+                      <strong className="text-slate-900 dark:text-white block">
+                        സഫാരിയിൽ താഴെയുള്ള Share ബട്ടൺ അമർത്തുക
+                      </strong>
+                      <span className="text-[11px] text-slate-500">
+                        Tap the Share icon <Share2 className="w-3.5 h-3.5 inline mx-0.5 text-blue-500" /> (box with arrow pointing up) at the bottom of Safari.
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <strong className="text-slate-900 dark:text-white block">
-                      സഫാരി ബ്രൗസറിൽ (Safari) താഴെയുള്ള Share ബട്ടൺ അമർത്തുക
-                    </strong>
-                    <span className="text-[11px] text-slate-500">
-                      Tap the Share icon <Share2 className="w-3.5 h-3.5 inline mx-0.5 text-blue-500" /> (box with arrow pointing up) at bottom of Safari.
-                    </span>
+
+                  {/* Step 2 */}
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-100 dark:border-zinc-800">
+                    <div className="w-6 h-6 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+                      2
+                    </div>
+                    <div>
+                      <strong className="text-slate-900 dark:text-white block">
+                        "Add to Home Screen" തിരഞ്ഞെടുക്കുക
+                      </strong>
+                      <span className="text-[11px] text-slate-500">
+                        Scroll down the share sheet and tap <PlusSquare className="w-3.5 h-3.5 inline mx-0.5 text-blue-500" /> <strong>"Add to Home Screen"</strong>, then tap <strong>"Add"</strong> in top-right.
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-100 dark:border-zinc-800">
+                    <div className="w-6 h-6 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+                      3
+                    </div>
+                    <div>
+                      <strong className="text-slate-900 dark:text-white block">
+                        ഹോം സ്ക്രീനിലെ പുതിയ iDonate ആപ്പ് തുറന്ന് "Allow" നൽകുക
+                      </strong>
+                      <span className="text-[11px] text-slate-500">
+                        Open the newly installed app from your home screen and tap "Allow" when asked for notifications.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ─── GOOGLE CHROME INSTRUCTIONS ─── */}
+            {iosBrowser === 'chrome' && (
+              <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/80 dark:border-zinc-800 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <Globe className="w-4 h-4 text-amber-500" />
+                    <span>ക്രോം ബ്രൗസർ വഴി സെറ്റ് ചെയ്യാം (Chrome on iOS)</span>
+                  </h3>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                    iOS Chrome
+                  </span>
+                </div>
+
+                <div className="space-y-2.5 text-xs">
+                  {/* Step 1 */}
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-100 dark:border-zinc-800">
+                    <div className="w-6 h-6 rounded-full bg-amber-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+                      1
+                    </div>
+                    <div>
+                      <strong className="text-slate-900 dark:text-white block">
+                        ക്രോമിൽ Share ഐക്കൺ അല്ലെങ്കിൽ മെനു (3 കുത്തുകൾ) അമർത്തുക
+                      </strong>
+                      <span className="text-[11px] text-slate-500">
+                        In Chrome on iPhone, tap the Share icon <Share2 className="w-3.5 h-3.5 inline mx-0.5 text-amber-600" /> in the address bar, or tap the <MoreHorizontal className="w-3.5 h-3.5 inline mx-0.5 text-amber-600" /> (3 dots menu) at the bottom right.
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-100 dark:border-zinc-800">
+                    <div className="w-6 h-6 rounded-full bg-amber-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+                      2
+                    </div>
+                    <div>
+                      <strong className="text-slate-900 dark:text-white block">
+                        "Add to Home Screen" തിരഞ്ഞെടുക്കുക
+                      </strong>
+                      <span className="text-[11px] text-slate-500">
+                        Scroll down the menu options and tap <PlusSquare className="w-3.5 h-3.5 inline mx-0.5 text-amber-600" /> <strong>"Add to Home Screen"</strong>, then tap <strong>"Add"</strong>.
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-100 dark:border-zinc-800">
+                    <div className="w-6 h-6 rounded-full bg-amber-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+                      3
+                    </div>
+                    <div>
+                      <strong className="text-slate-900 dark:text-white block">
+                        ഹോം സ്ക്രീനിലെ iDonate ഐക്കൺ തുറന്ന് "Allow" നൽകുക
+                      </strong>
+                      <span className="text-[11px] text-slate-500">
+                        Open the newly added app from your iPhone home screen and tap "Allow" to enable live push alerts.
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Step 2 */}
-                <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-100 dark:border-zinc-800">
-                  <div className="w-6 h-6 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shrink-0">
-                    2
-                  </div>
+                {/* Important tip for Chrome users */}
+                <div className="p-3 bg-amber-50/70 dark:bg-amber-950/30 rounded-xl border border-amber-200/60 dark:border-amber-900/40 text-[11px] text-amber-900 dark:text-amber-200 flex items-start gap-2">
+                  <Sparkles className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
                   <div>
-                    <strong className="text-slate-900 dark:text-white block">
-                      "Add to Home Screen" തിരഞ്ഞെടുക്കുക
-                    </strong>
-                    <span className="text-[11px] text-slate-500">
-                      Scroll down and tap <PlusSquare className="w-3.5 h-3.5 inline mx-0.5 text-blue-500" /> <strong>"Add to Home Screen"</strong>, then tap "Add" in top-right.
-                    </span>
-                  </div>
-                </div>
-
-                {/* Step 3 */}
-                <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-100 dark:border-zinc-800">
-                  <div className="w-6 h-6 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shrink-0">
-                    3
-                  </div>
-                  <div>
-                    <strong className="text-slate-900 dark:text-white block">
-                      ഹോം സ്ക്രീനിലെ പുതിയ iDonate ആപ്പ് തുറന്ന് "Allow" നൽകുക
-                    </strong>
-                    <span className="text-[11px] text-slate-500">
-                      Open the app from your home screen and tap "Allow" when asked for notifications.
+                    <strong className="block">ക്രോമിൽ "Add to Home Screen" കാണുന്നില്ലെങ്കിൽ:</strong>
+                    <span>
+                      ചില ഐഫോൺ വേർഷനുകളിൽ ക്രോം മെനുവിൽ ഇത് ഉണ്ടാകില്ല. അങ്ങനെയാണെങ്കിൽ ക്രോമിലെ 3 കുത്തുകളിൽ (Menu) ക്ലിക്ക് ചെയ്ത് <strong>"Open in Safari"</strong> നൽകുക, തുടർന്ന് സഫാരി വഴി ഹോം സ്ക്രീനിലേക്ക് ആഡ് ചെയ്യാം.
                     </span>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* What Works & Limitations on iPhone */}
             <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/80 dark:border-zinc-800 p-4 space-y-2.5">

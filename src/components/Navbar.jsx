@@ -14,6 +14,7 @@ const publicLinks = [
   { label: 'Requests', to: '/requests' },
   { label: 'Directory', to: '/volunteer-directory' },
   { label: 'User Manual', to: '/user-manual' },
+  { label: 'Notification Guide', to: '/notification-guide' },
   { label: 'Get App', to: '/download-app' },
 ];
 
@@ -140,13 +141,13 @@ export default function Navbar() {
         </Link>
 
         {/* Clean Minimal Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1">
           {publicLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
               onClick={(e) => handleLinkClick(e, link.to)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-150 ${isActive(link.to)
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-150 ${isActive(link.to)
                   ? 'text-red-600 bg-red-50'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                 }`}
@@ -184,9 +185,15 @@ export default function Navbar() {
                     >
                       <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-100">
                         <span className="text-xs font-bold text-slate-800">Alerts</span>
-                        <Link to="/notifications" onClick={() => setNotifOpen(false)} className="text-[11px] text-red-600 hover:underline font-bold">
-                          View All
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          <Link to="/notification-guide" onClick={() => setNotifOpen(false)} className="text-[11px] text-slate-500 hover:text-red-600 font-medium">
+                            Guide
+                          </Link>
+                          <span className="text-slate-300 text-xs">•</span>
+                          <Link to="/notifications" onClick={() => setNotifOpen(false)} className="text-[11px] text-red-600 hover:underline font-bold">
+                            View All
+                          </Link>
+                        </div>
                       </div>
                       <div className="space-y-2 max-h-60 overflow-y-auto no-scrollbar">
                         {notifications.length === 0 ? (

@@ -1,0 +1,519 @@
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore.js';
+import { useAppStore } from '../store/appStore.js';
+import { normalizeRole } from '../utils/rbac.js';
+import { Mail, Eye, EyeOff, Lock, ArrowRight, ArrowLeft, ShieldCheck, Heart, ShieldAlert, AlertTriangle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+export default function Login() {
+  const [credential, setCredential] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotInput, setForgotInput] = useState('');
+  const [modalType, setModalType] = useState(null);
+  const [deactivatedAccountModal, setDeactivatedAccountModal] = useState(null);
+
+  const { login, loading } = useAuthStore();
+  const { triggerToast, fetchRequests, fetchNotifications, fetchUsers, publicStats, fetchPublicStats } = useAppStore();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchPublicStats();
+  }, [fetchPublicStats]);
+
+  const redirectByRole = (role) => {
+    const norm = normalizeRole(role);
+    if (norm === 'technical_admin') navigate('/technical-admin/dashboard');
+    else if (norm === 'super_admin') navigate('/super-admin/dashboard');
+    else if (norm === 'block_admin') navigate('/block-admin/dashboard');
+    else if (norm === 'volunteer') navigate('/volunteer/dashboard');
+    else if (norm === 'unit_squad') navigate('/unit-squad/dashboard');
+    else navigate('/dashboard');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!credential || !password) { triggerToast('Please fill all fields.', 'warning'); return; }
+
+    try {
+      const res = await login(credential, password);
+
+      if (res && res.success) {
+        triggerToast('Authentication Successful. Welcome back!', 'success');
+
+        Promise.allSettled([
+          fetchRequests(),
+          fetchNotifications(),
+          ['admin', 'volunteer', 'super_admin', 'technical_admin', 'unit_squad'].includes(res.role) ? fetchUsers() : Promise.resolve()
+        ]).catch(err => console.warn('[DEBUG Login] Background fetch warning:', err));
+
+        redirectByRole(res.role);
+      } else if (res?.isDeactivated) {
+        setDeactivatedAccountModal({
+          message: res.error,
+          reason: res.deactivationReason || null
+        });
+      } else {
+        const errorMsg = res?.error || 'Invalid credentials. Please try again.';
+        triggerToast(errorMsg, 'error');
+      }
+    } catch (err) {
+      triggerToast('Login failed: ' + (err.message || 'Server error'), 'error');
+    }
+  };
+
+  const renderModalContent = () => {
+    switch (modalType) {
+      case 'privacy':
+        return (
+          <>
+            <h3 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">Privacy Policy</h3>
+            <div className="text-slate-500 text-sm font-medium mb-8 leading-relaxed max-h-[50vh] overflow-y-auto pr-3 custom-scrollbar">
+              <p className="mb-4">Welcome to iDonate. Your privacy is critically important to us. This Privacy Policy explains how we collect, use, and protect your personal information when you use our web application and services.</p>
+              <h4 className="font-bold text-slate-800 mb-2">1. Information Collection</h4>
+              <p className="mb-4">We collect information such as your name, contact details, blood group, and precise location data when you register or use the service to coordinate life-saving blood donations. Your location is strictly used for emergency SOS proximity matching.</p>
+              <h4 className="font-bold text-slate-800 mb-2">2. How We Use Your Data</h4>
+              <p className="mb-4">Your personal details are used primarily to alert you during blood shortage emergencies and connect you with verified blood banks or patients in your vicinity. We also use aggregated, anonymized data for platform analytics.</p>
+              <h4 className="font-bold text-slate-800 mb-2">3. Data Security & Sharing</h4>
+              <p className="mb-4">We implement enterprise-grade security measures to ensure your data is protected against unauthorized access. We do not sell your personal data to third parties. Information is only shared with verified healthcare partners during an active emergency request.</p>
+              <h4 className="font-bold text-slate-800 mb-2">4. Your Rights</h4>
+              <p>You have the right to access, modify, or permanently delete your account data at any time via your user dashboard settings.</p>
+            </div>
+          </>
+        );
+      case 'terms':
+        return (
+          <>
+            <h3 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">Terms of Service</h3>
+            <div className="text-slate-500 text-sm font-medium mb-8 leading-relaxed max-h-[50vh] overflow-y-auto pr-3 custom-scrollbar">
+              <p className="mb-4">By accessing iDonate, you agree to be bound by these Terms of Service. Please read them carefully as they govern your use of the platform.</p>
+              <h4 className="font-bold text-slate-800 mb-2">1. Platform Usage</h4>
+              <p className="mb-4">You must use the platform responsibly and solely for coordinating and finding blood donations. Any misuse, false emergency requests, or spamming will result in immediate permanent account suspension.</p>
+              <h4 className="font-bold text-slate-800 mb-2">2. User Responsibility</h4>
+              <p className="mb-4">You are responsible for maintaining the confidentiality of your account credentials and providing accurate, up-to-date health and contact information. You confirm that you meet the legal age and health requirements to donate blood when opting in.</p>
+              <h4 className="font-bold text-slate-800 mb-2">3. Emergency SOS Feature</h4>
+              <p className="mb-4">The Emergency SOS feature is for critical life-threatening situations only. Abuse of the SOS siren or rapid-alert system is strictly prohibited.</p>
+              <h4 className="font-bold text-slate-800 mb-2">4. Limitation of Liability</h4>
+              <p>iDonate is a coordination platform. We do not guarantee the availability of blood or the medical suitability of donors. All medical procedures are the sole responsibility of the certified healthcare providers.</p>
+            </div>
+          </>
+        );
+      case 'help':
+        return (
+          <>
+            <h3 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">Help Center</h3>
+            <div className="text-slate-500 text-sm font-medium mb-8 leading-relaxed max-h-[50vh] overflow-y-auto pr-3 custom-scrollbar">
+              <p className="mb-6">Need assistance with your iDonate account or facing a technical issue? Our support teams are ready to help you.</p>
+              
+              <div className="bg-red-50 p-5 rounded-2xl border border-red-100 mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Heart className="w-4 h-4 text-red-600" />
+                  <p className="font-bold text-slate-900">iDonate Support</p>
+                </div>
+                <p className="text-red-600 font-bold mb-1">support@idonate.org</p>
+                <p className="text-xs text-red-800/70 font-medium">For general inquiries and platform assistance.</p>
+              </div>
+
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                <p className="font-bold text-slate-900 mb-1">Technical Partner: Trawbit Technologies</p>
+                <p className="text-slate-700 font-bold mb-1">+91 94972 19574</p>
+                <p className="text-slate-700 font-bold mb-1">support@trawbit</p>
+                <p className="text-xs text-slate-500 font-medium mt-2">For bug reports, technical issues, and system integrations.</p>
+              </div>
+            </div>
+          </>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen w-full relative flex flex-col lg:flex-row bg-[#F8FAFC] overflow-hidden font-sans selection:bg-rose-200 selection:text-rose-900">
+
+      {/* ── Back to Landing Page Button ── */}
+      <Link 
+        to="/" 
+        className="absolute top-6 left-6 z-50 flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-md rounded-full text-white text-xs font-bold tracking-widest uppercase transition-all duration-300 hover:-translate-x-1"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back
+      </Link>
+
+      {/* ── Immersive Abstract Background ── */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden bg-gradient-to-b lg:bg-gradient-to-br from-red-600 via-rose-600 to-red-900">
+        <motion.div
+          animate={{ x: [0, 50, 0], y: [0, -30, 0], scale: [1, 1.1, 1] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] max-w-[800px] max-h-[800px] rounded-full mix-blend-multiply"
+          style={{ 
+            backgroundImage: 'radial-gradient(circle, rgba(69,10,10,0.4) 0%, transparent 70%)',
+            willChange: 'transform'
+          }}
+        />
+        <motion.div
+          animate={{ x: [0, -50, 0], y: [0, 50, 0], scale: [1, 1.1, 1] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] rounded-full mix-blend-screen opacity-50"
+          style={{ 
+            backgroundImage: 'radial-gradient(circle, rgba(251,113,133,0.4) 0%, transparent 70%)',
+            willChange: 'transform'
+          }}
+        />
+        <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
+      </div>
+
+      {/* ── Brand Hero (Top on Mobile, Left on Desktop) ── */}
+      <div className="relative z-10 w-full lg:w-[45%] xl:w-[50%] flex flex-col justify-start lg:justify-center px-6 pt-16 pb-32 sm:pb-40 lg:p-20 text-white">
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="max-w-lg"
+        >
+          {/* iDonate Wordmark — loading screen style */}
+          <div className="mb-2 select-none">
+            <span
+              style={{
+                fontFamily: "'Inter', system-ui, sans-serif",
+                fontSize: 'clamp(3rem, 10vw, 4.5rem)',
+                fontWeight: 900,
+                letterSpacing: '-0.035em',
+                lineHeight: 1,
+                color: '#ffffff',
+                display: 'block',
+              }}
+            >
+              <span style={{ color: 'rgba(255,255,255,0.65)' }}>i</span>Donate
+            </span>
+            <span
+              style={{
+                fontFamily: "'Inter', system-ui, sans-serif",
+                fontSize: '0.7rem',
+                fontWeight: 800,
+                letterSpacing: '0.18em',
+                color: 'rgba(255,255,255,0.7)',
+                textTransform: 'uppercase',
+                display: 'block',
+                marginTop: '6px',
+              }}
+            >
+              by DYFI Kasaragod
+            </span>
+          </div>
+
+          <p className="text-white/70 text-sm sm:text-base leading-relaxed font-medium mt-8 mb-10">
+            Behind every login is a potential life saved. Access your portal to coordinate, connect, and continue the mission of compassion.
+          </p>
+
+          <div className="grid grid-cols-2 gap-6 border-t border-white/15 pt-8">
+            <div>
+              <div className="text-3xl font-black text-white mb-1">{publicStats?.totalVolunteers || '-'}</div>
+              <div className="text-[10px] font-bold tracking-widest text-white/50 uppercase">Active Meghalas</div>
+            </div>
+            <div>
+              <div className="text-3xl font-black text-white mb-1">{publicStats?.totalRequests || '-'}</div>
+              <div className="text-[10px] font-bold tracking-widest text-white/50 uppercase">Blood Requests</div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* ── Auth Form (Bottom Sheet on Mobile, Right Panel on Desktop) ── */}
+      <div className="relative z-20 w-full lg:w-[55%] xl:w-[50%] flex items-end lg:items-center justify-center -mt-20 lg:mt-0 lg:p-12 xl:p-16">
+        <motion.div
+          initial={{ y: 150, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ type: "spring", bounce: 0.2, duration: 1, delay: 0.3 }}
+          className="w-full max-w-[500px] bg-white rounded-t-[2.5rem] lg:rounded-[2.5rem] shadow-[0_-20px_50px_-15px_rgba(0,0,0,0.3)] lg:shadow-2xl px-6 sm:px-10 py-8 lg:p-12 pb-24 lg:pb-12"
+        >
+          {/* iOS-style drag handle indicator for mobile only */}
+          <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-8 lg:hidden"></div>
+
+          <div className="mb-10 text-center lg:text-left">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mb-2 tracking-tight">
+              Welcome Back
+            </h2>
+            <p className="text-slate-500 text-sm font-medium">Please securely log in to your portal.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
+
+            {/* Modern Outline Input - Email */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-1 block text-left">
+                Email Address
+              </label>
+              <div className="relative flex items-center group">
+                <div className="absolute left-4">
+                  <Mail className="w-5 h-5 text-slate-400 group-focus-within:text-red-600 transition-colors" />
+                </div>
+                <input
+                  type="text"
+                  value={credential}
+                  onChange={(e) => setCredential(e.target.value)}
+                  autoComplete="off"
+                  className="w-full bg-white border-2 border-slate-200 hover:border-slate-300 focus:border-red-500 rounded-2xl transition-all duration-300 py-4 pl-12 pr-4 text-slate-900 font-medium text-sm outline-none shadow-sm"
+                  placeholder="you@idonate.org"
+                />
+              </div>
+            </div>
+
+            {/* Modern Outline Input - Password */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center pl-1 pr-2">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest text-left">
+                  Password
+                </label>
+                <button type="button" onClick={() => setForgotOpen(true)} className="text-[11px] font-bold text-slate-400 hover:text-red-600 transition-colors">
+                  Forgot?
+                </button>
+              </div>
+              <div className="relative flex items-center group">
+                <div className="absolute left-4">
+                  <Lock className="w-5 h-5 text-slate-400 group-focus-within:text-red-600 transition-colors" />
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  className="w-full bg-white border-2 border-slate-200 hover:border-slate-300 focus:border-red-500 rounded-2xl transition-all duration-300 py-4 pl-12 pr-12 text-slate-900 font-medium text-sm outline-none tracking-widest shadow-sm"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 text-slate-400 hover:text-slate-800 transition-colors p-1"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Remember Me */}
+            <div className="flex items-center justify-between pt-2 pb-2">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div className="relative flex items-center justify-center">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="peer sr-only"
+                  />
+                  <div className="w-4 h-4 border-2 border-slate-300 rounded bg-white peer-checked:bg-red-600 peer-checked:border-red-600 transition-all duration-300 flex items-center justify-center">
+                    <svg className="w-2.5 h-2.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-300" viewBox="0 0 14 10" fill="none">
+                      <path d="M1 5L4.5 8.5L13 1" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </div>
+                <span className="text-[13px] text-slate-600 group-hover:text-slate-900 transition-colors font-medium">Keep me signed in</span>
+              </label>
+            </div>
+
+            {/* Action Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="relative w-full group overflow-hidden rounded-2xl bg-red-600 hover:bg-red-700 transition-colors duration-300 shadow-[0_8px_20px_rgba(220,38,38,0.2)] hover:shadow-[0_15px_30px_rgba(220,38,38,0.4)] transform hover:-translate-y-0.5"
+            >
+              <div className="px-6 py-4 flex items-center justify-center gap-3">
+                {loading ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4 text-white" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                    <span className="text-white text-xs font-bold tracking-widest uppercase">Authenticating...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-white text-xs font-bold tracking-widest uppercase">Sign In</span>
+                    <ArrowRight className="w-4 h-4 text-white group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </div>
+            </button>
+          </form>
+
+          <div className="mt-8 flex flex-col items-center justify-center gap-5">
+            <div className="flex items-center gap-1.5 opacity-60">
+              <ShieldCheck className="w-3.5 h-3.5 text-slate-500" />
+              <p className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">
+                Secured by iDonate Enterprise
+              </p>
+            </div>
+            
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-4 text-[10px] font-bold tracking-widest uppercase text-slate-400">
+              <button type="button" onClick={() => setModalType('privacy')} className="hover:text-red-600 transition-colors">Privacy Policy</button>
+              <span className="opacity-50">&bull;</span>
+              <button type="button" onClick={() => setModalType('terms')} className="hover:text-red-600 transition-colors">Terms of Service</button>
+              <span className="opacity-50">&bull;</span>
+              <button type="button" onClick={() => setModalType('help')} className="hover:text-red-600 transition-colors">Help Center</button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* ── Forgot Password Minimal Modal ── */}
+      <AnimatePresence>
+        {forgotOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+              onClick={() => setForgotOpen(false)}
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="relative z-10 w-full max-w-md bg-white rounded-[2rem] p-8 md:p-10 shadow-2xl overflow-hidden"
+            >
+              <div className="relative z-10 flex flex-col">
+                <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mb-6">
+                  <Mail className="w-6 h-6 text-red-600" />
+                </div>
+                <h3 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">Reset Password</h3>
+                <p className="text-slate-500 text-sm font-medium mb-8 leading-relaxed">
+                  Enter your registered email address. We'll send you a secure link to reset your password.
+                </p>
+
+                <div className="w-full space-y-8">
+                  <div className="relative flex items-center group">
+                    <div className="absolute left-4">
+                      <Mail className="w-5 h-5 text-slate-400 group-focus-within:text-red-600 transition-colors" />
+                    </div>
+                    <input
+                      type="email"
+                      value={forgotInput}
+                      onChange={(e) => setForgotInput(e.target.value)}
+                      placeholder="you@idonate.org"
+                      autoComplete="off"
+                      className="w-full bg-white border-2 border-slate-200 hover:border-slate-300 focus:border-red-500 rounded-2xl transition-all duration-300 py-4 pl-12 pr-4 text-slate-900 font-medium text-sm outline-none shadow-sm"
+                    />
+                  </div>
+
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => setForgotOpen(false)}
+                      className="flex-1 py-4 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 text-xs font-bold tracking-widest uppercase transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (!forgotInput) return triggerToast('Please enter your email.', 'warning');
+                        const res = await useAuthStore.getState().forgotPassword(forgotInput);
+                        if (res.success) {
+                          triggerToast('Secure reset link dispatched to your email.', 'success');
+                          setForgotOpen(false);
+                          setForgotInput('');
+                        } else {
+                          triggerToast(res.error, 'error');
+                        }
+                      }}
+                      disabled={loading}
+                      className="flex-1 py-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold tracking-widest uppercase shadow-md transition-colors disabled:opacity-50 cursor-pointer"
+                    >
+                      {loading ? 'Sending...' : 'Send Link'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Info Modal (Privacy, Terms, Help) ── */}
+      <AnimatePresence>
+        {modalType && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+              onClick={() => setModalType(null)}
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="relative z-10 w-full max-w-md bg-white rounded-[2rem] p-8 md:p-10 shadow-2xl overflow-hidden"
+            >
+              <div className="relative z-10 flex flex-col">
+                 {renderModalContent()}
+                 <button 
+                   onClick={() => setModalType(null)} 
+                   className="w-full py-4 mt-2 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 text-xs font-bold tracking-widest uppercase transition-colors cursor-pointer"
+                 >
+                   Close
+                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* ── Deactivated Account Modal ── */}
+      <AnimatePresence>
+        {deactivatedAccountModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-950/70 backdrop-blur-md"
+              onClick={() => setDeactivatedAccountModal(null)}
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="relative z-10 w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-red-100 overflow-hidden"
+            >
+              <div className="text-center space-y-4">
+                <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-100 text-red-600 flex items-center justify-center mx-auto shadow-xs">
+                  <ShieldAlert className="w-7 h-7" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight">Account Deactivated</h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Your account access has been restricted by an administrator.
+                  </p>
+                </div>
+
+                {/* Deactivation Reason Callout Box */}
+                <div className="bg-red-50/70 border border-red-200/80 rounded-2xl p-4 text-left space-y-1.5">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-red-700 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3 text-red-600" /> Reason for Deactivation
+                  </span>
+                  <p className="text-xs font-semibold text-slate-800 leading-relaxed">
+                    {deactivatedAccountModal.reason || 'Administrative Review & Compliance Hold'}
+                  </p>
+                </div>
+
+                <p className="text-[11px] text-slate-500 font-medium">
+                  If you believe this is an error or need your account reactivated, please contact the State / Technical Administration team.
+                </p>
+
+                <div className="pt-2 flex gap-3">
+                  <button
+                    onClick={() => setDeactivatedAccountModal(null)}
+                    className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                  >
+                    I Understand
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

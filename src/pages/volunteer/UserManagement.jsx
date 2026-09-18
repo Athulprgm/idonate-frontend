@@ -1,0 +1,1690 @@
+import { useEffect, useState, useCallback } from 'react';
+import { useAppStore } from '../../store/appStore.js';
+import { useAuthStore } from '../../store/authStore.js';
+import api from '../../store/api.js';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Users, Plus, Eye, ShieldCheck, Mail, Save, X, Loader2, KeyRound, Phone, MapPin, Lock, Trash2, Upload, Droplet, Clock, CheckCircle2, AlertTriangle, Navigation, Map as MapIcon, Compass, Sparkles, Crosshair, Crop
+} from 'lucide-react';
+import FilterBar from '../../components/admin/FilterBar.jsx';
+import ConfirmModal from '../../components/admin/ConfirmModal.jsx';
+import LocationSearchInput from '../../components/LocationSearchInput.jsx';
+import MapLibreContainer from '../../components/MapLibreContainer.jsx';
+import ImageCropperModal from '../../components/ImageCropperModal.jsx';
+import { reverseGeocodeNominatim } from '../../services/mapService.js';
+import { getStorageUrl } from '../../store/api.js';
+
+const STATUS_OPTIONS = ['Active', 'Inactive', 'Suspended', 'Pending Approval'];
+const ROLES = ['user', 'donor', 'receiver'];
+
+const getEighteenYearsAgoDate = () => {
+  const today = new Date();
+  const year = today.getFullYear() - 18;
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const StatusBadge = ({ status, isVerified }) => {
+  const isPending = !isVerified && (status || '').toLowerCase() !== 'active';
+
+  if (isPending) {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-1 rounded-full border bg-amber-50 text-amber-700 border-amber-200/90 shadow-2xs">
+        <Clock className="w-3 h-3 text-amber-600 animate-pulse" /> Pending Verification
+      </span>
+    );
+  }
+
+  const map = {
+    Active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    Inactive: 'bg-slate-100 text-slate-600 border-slate-300',
+    inactive: 'bg-slate-100 text-slate-600 border-slate-300',
+    Suspended: 'bg-red-50 text-red-700 border-red-200',
+    suspended: 'bg-red-50 text-red-700 border-red-200',
+    Rejected: 'bg-rose-50 text-rose-700 border-rose-200',
+    rejected: 'bg-rose-50 text-rose-700 border-rose-200',
+  };
+
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-1 rounded-full border shadow-2xs ${map[status] || 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+      <CheckCircle2 className="w-3 h-3 text-emerald-600" /> {status === 'Active' || status === 'active' ? 'Active & Verified' : status}
+    </span>
+  );
+};
+
+export default function UserManagement() {
+  const {
+    allUsers,
+    fetchUsers,
+    volunteerSendOtp,
+    volunteerVerifyOtp,
+    volunteerSendRegistrationOtp,
+    volunteerVerifyRegistrationOtp,
+    volunteerUpdateUser,
+    volunteerAddUser,
+    volunteerVerifyUser,
+    volunteerRejectUser,
+    deleteUser,
+    triggerToast
+  } = useAppStore();
+  const { user: currentUser } = useAuthStore();
+
+  // Meghala-scoped user list (fetched from /volunteer/users which backend scopes by meghala)
+  const [meghalaUsers, setMeghalaUsers] = useState([]);
+  const [fetchingUsers, setFetchingUsers] = useState(false);
+
+  const myRole = (currentUser?.role || '').toLowerCase().trim();
+  const isMeghalaScoped = ['volunteer', 'meghala', 'meghala_volunteer', 'block_volunteer', 'unit_squad'].includes(myRole) ||
+    myRole.includes('meghala') || myRole.includes('volunteer');
+
+  const fetchMeghalaUsers = useCallback(async () => {
+    setFetchingUsers(true);
+    try {
+      if (isMeghalaScoped) {
+        // Use volunteer-scoped endpoint — backend filters by the logged-in user's meghala
+        const res = await api.get('/volunteer/users');
+        if (res.data?.success) {
+          const list = res.data.data?.users ||
+                       res.data.data?.donors ||
+                       (Array.isArray(res.data.data) ? res.data.data : []);
+          // Keep only donor-type roles
+          setMeghalaUsers(list.filter(u =>
+            ['user', 'donor', 'receiver'].includes((u.role || '').toLowerCase())
+          ));
+          return;
+        }
+      }
+      // Fallback: admin roles use the global fetchUsers
+      await fetchUsers();
+      setMeghalaUsers([]);
+    } catch (err) {
+      console.warn('fetchMeghalaUsers error:', err);
+      if (!isMeghalaScoped) {
+        try { await fetchUsers(); } catch { /* ignore */ }
+      }
+      setMeghalaUsers([]);
+    } finally {
+      setFetchingUsers(false);
+    }
+  }, [isMeghalaScoped, fetchUsers]);
+  const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState({ status: 'all', role: 'all' });
+  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'pending' | 'verified'
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [confirmModal, setConfirmModal] = useState({ open: false, item: null });
+  const [rejectingUserId, setRejectingUserId] = useState(null);
+
+  // Edit OTP states
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpVerified, setOtpVerified] = useState(false);
+
+  // Add Donor / Registration OTP states
+  const [addOtpSent, setAddOtpSent] = useState(false);
+  const [addOtpCode, setAddOtpCode] = useState('');
+  const [addOtpVerified, setAddOtpVerified] = useState(false);
+  const [addOtpLoading, setAddOtpLoading] = useState(false);
+  const [addOtpCooldown, setAddOtpCooldown] = useState(0);
+  const [verifiedEmail, setVerifiedEmail] = useState('');
+
+  // Add Donor Map & Place Search states
+  const [addMapPos, setAddMapPos] = useState(null);
+  const [addMapAddress, setAddMapAddress] = useState('');
+  const [showMapCanvas, setShowMapCanvas] = useState(false);
+  const [gpsLoading, setGpsLoading] = useState(false);
+
+  // Profile Image Cropper states
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState(null);
+
+  const handleImageSelectedForCrop = (file) => {
+    if (!file) return;
+    setImageToCrop(file);
+    setCropperOpen(true);
+  };
+
+  const handleCropComplete = (croppedFile) => {
+    setForm((prev) => ({
+      ...prev,
+      profile_picture: croppedFile,
+    }));
+    triggerToast('Profile picture cropped successfully!', 'success');
+  };
+
+  const handleReCropExisting = () => {
+    if (!form.profile_picture) return;
+    if (typeof form.profile_picture === 'string') {
+      setImageToCrop(getStorageUrl(form.profile_picture));
+    } else {
+      setImageToCrop(form.profile_picture);
+    }
+    setCropperOpen(true);
+  };
+
+  const handleUseGPS = () => {
+    if (!navigator.geolocation) {
+      triggerToast('Geolocation is not supported by your browser.', 'warning');
+      return;
+    }
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const newPos = { lat, lng };
+        setAddMapPos(newPos);
+        try {
+          const geo = await reverseGeocodeNominatim(lat, lng);
+          const addressText = geo?.displayName || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+          setAddMapAddress(addressText);
+          const placeName = geo?.city || geo?.address?.suburb || geo?.address?.town || geo?.address?.village || addressText.split(',')[0].trim();
+          const pincodeVal = geo?.postcode || geo?.address?.postcode || form.pincode || '';
+          setForm(prev => ({
+            ...prev,
+            place: placeName || prev.place,
+            city: placeName || prev.city,
+            pincode: pincodeVal ? String(pincodeVal).replace(/\D/g, '').slice(0, 6) : prev.pincode,
+            latitude: lat,
+            longitude: lng,
+          }));
+          triggerToast('Current GPS location detected and pinned!', 'success');
+        } catch (err) {
+          console.error('GPS reverse geocode error:', err);
+          setAddMapAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+          setForm(prev => ({ ...prev, latitude: lat, longitude: lng }));
+          triggerToast('GPS coordinates acquired!', 'success');
+        } finally {
+          setGpsLoading(false);
+        }
+      },
+      (err) => {
+        console.error('GPS Geolocation error:', err);
+        let msg = 'Unable to retrieve your GPS location.';
+        if (err.code === 1) msg = 'Location permission denied. Please allow location access in your browser settings.';
+        else if (err.code === 2) msg = 'GPS location unavailable.';
+        else if (err.code === 3) msg = 'GPS location request timed out.';
+        triggerToast(msg, 'warning');
+        setGpsLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+  // Add OTP Cooldown Countdown
+  useEffect(() => {
+    let timer;
+    if (addOtpCooldown > 0) {
+      timer = setInterval(() => {
+        setAddOtpCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [addOtpCooldown]);
+
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [form, setForm] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [verifyingUserId, setVerifyingUserId] = useState(null);
+
+  const handleSendAddOtp = async () => {
+    const emailToVerify = (form.email || '').trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailToVerify || !emailRegex.test(emailToVerify)) {
+      triggerToast('Please enter a valid donor email address first.', 'warning');
+      return;
+    }
+
+    setAddOtpLoading(true);
+    const res = await volunteerSendRegistrationOtp(emailToVerify, form.primary_name);
+    if (res.success) {
+      setAddOtpSent(true);
+      setAddOtpCooldown(60);
+      setAddOtpCode('');
+    }
+    setAddOtpLoading(false);
+  };
+
+  const handleVerifyAddOtp = async () => {
+    const emailToVerify = (form.email || '').trim().toLowerCase();
+    if (!addOtpCode || addOtpCode.trim().length !== 6) {
+      triggerToast('Please enter the 6-digit OTP code sent to the email.', 'warning');
+      return;
+    }
+
+    setAddOtpLoading(true);
+    const res = await volunteerVerifyRegistrationOtp(emailToVerify, addOtpCode.trim());
+    if (res.success) {
+      setAddOtpVerified(true);
+      setVerifiedEmail(emailToVerify);
+    }
+    setAddOtpLoading(false);
+  };
+
+  const openEditModal = (userToEdit) => {
+    const target = userToEdit || selectedUser;
+    if (!target) return;
+    setSelectedUser(target);
+    setForm({ ...target });
+    setOtpSent(false);
+    setOtpVerified(false);
+    setOtpCode('');
+    setShowEditModal(true);
+  };
+
+  useEffect(() => {
+    fetchMeghalaUsers();
+  }, [fetchMeghalaUsers]);
+
+  const handleVerifyUser = async (userToVerify) => {
+    const userId = userToVerify._id || userToVerify.id;
+    setVerifyingUserId(userId);
+    const res = await volunteerVerifyUser(userId);
+    if (res.success) {
+      triggerToast(`User verified & accepted successfully! Password sent directly to ${userToVerify.email}`, 'success');
+      if (selectedUser && (selectedUser._id === userId || selectedUser.id === userId)) {
+        setSelectedUser({ ...selectedUser, status: 'Active', is_verified: true });
+      }
+      fetchMeghalaUsers();
+    }
+    setVerifyingUserId(null);
+  };
+
+  // Determine current user's meghala name for UI display
+  const myMeghala = (
+    currentUser?.meghala ||
+    currentUser?.meghalaName ||
+    currentUser?.meghala_name ||
+    currentUser?.city ||
+    currentUser?.organization_name ||
+    ''
+  ).trim();
+
+  // Determine the user list source:
+  // - Meghala volunteers: strictly use freshly fetched meghalaUsers (backend-scoped to only users added by this Meghala)
+  // - Admin roles: fall back to allUsers from the global store
+  const allDonorUsers = allUsers.filter(u => ['user', 'donor', 'receiver'].includes((u.role || '').toLowerCase()));
+
+  // For Meghala Committee volunteers, show strictly only users added by this Meghala
+  const users = isMeghalaScoped ? meghalaUsers : allDonorUsers;
+
+  const pendingUsers = users.filter(u => !u.is_verified && !u.isVerified && (u.status || '').toLowerCase() !== 'active');
+  const verifiedUsers = users.filter(u => u.is_verified || u.isVerified || (u.status || '').toLowerCase() === 'active');
+  const pendingCount = pendingUsers.length;
+  const verifiedCount = verifiedUsers.length;
+
+  const filtered = users.filter(v => {
+    const isUserVerified = Boolean(v.is_verified || v.isVerified || (v.status || '').toLowerCase() === 'active');
+
+    if (activeTab === 'pending' && isUserVerified) return false;
+    if (activeTab === 'verified' && !isUserVerified) return false;
+
+    const q = search.toLowerCase();
+    const matchSearch = !q || [v.primaryName, v.primary_name, v.name, v.email, v.mobile, v.city, v.district, v.bloodGroup, v.blood_group].some(f => String(f || '').toLowerCase().includes(q));
+    const matchStatus = filters.status === 'all' || (v.status || '').toLowerCase() === filters.status.toLowerCase();
+    const matchRole = filters.role === 'all' || (v.role || '').toLowerCase() === filters.role.toLowerCase();
+    return matchSearch && matchStatus && matchRole;
+  });
+
+  const handleSendOtp = async () => {
+    if (!selectedUser) return;
+    setLoading(true);
+    const userId = selectedUser._id || selectedUser.id;
+    const res = await volunteerSendOtp(userId);
+    if (res.success) {
+      setOtpSent(true);
+    }
+    setLoading(false);
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpCode || otpCode.length !== 6) {
+      triggerToast('Please enter a valid 6-digit OTP', 'warning');
+      return;
+    }
+    setLoading(true);
+    const userId = selectedUser._id || selectedUser.id;
+    const res = await volunteerVerifyOtp(userId, otpCode);
+    if (res.success) {
+      setOtpVerified(true);
+      // Pre-fill form
+      setForm({
+        primary_name: selectedUser.primaryName || selectedUser.name || '',
+        email: selectedUser.email || '',
+        mobile: selectedUser.mobile || '',
+        blood_group: selectedUser.bloodGroup || selectedUser.blood_group || 'N/A',
+        district: selectedUser.district || '',
+        city: selectedUser.city || '',
+        profile_picture: selectedUser.profilePicture || selectedUser.profile_picture || null,
+      });
+    }
+    setLoading(false);
+  };
+
+  const handleUpdateSubmit = async (e) => {
+    e.preventDefault();
+    if (form.mobile) {
+      const cleanMobile = String(form.mobile).replace(/^(\+91|0)/, '').replace(/\D/g, '');
+      if (!cleanMobile || !/^[6-9]\d{9}$/.test(cleanMobile)) {
+        triggerToast('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.', 'warning');
+        return;
+      }
+    }
+    setLoading(true);
+    const userId = selectedUser._id || selectedUser.id;
+    const res = await volunteerUpdateUser(userId, form);
+    if (res.success) {
+      setShowEditModal(false);
+      setOtpSent(false);
+      setOtpVerified(false);
+      setOtpCode('');
+      await fetchMeghalaUsers();
+    }
+    setLoading(false);
+  };
+
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.profile_picture) {
+      triggerToast('Profile picture / image is required. Please upload an image file.', 'warning');
+      return;
+    }
+    if (form.profile_picture.size > 2 * 1024 * 1024) {
+      triggerToast('Profile picture must be less than 2MB.', 'warning');
+      return;
+    }
+    if (!['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(form.profile_picture.type)) {
+      triggerToast('Profile picture must be a JPEG, PNG, or WEBP image.', 'warning');
+      return;
+    }
+    if (!form.blood_group || form.blood_group === 'N/A') {
+      triggerToast('Blood group selection is required.', 'warning');
+      return;
+    }
+    if (!form.sex) {
+      triggerToast('Gender / Sex selection is required.', 'warning');
+      return;
+    }
+    if (!form.dob) {
+      triggerToast('Date of birth is required.', 'warning');
+      return;
+    }
+    const maxDob = getEighteenYearsAgoDate();
+    if (form.dob > maxDob) {
+      triggerToast('User must be at least 18 years old (DOB compare to current year and month).', 'warning');
+      return;
+    }
+    if (!form.primary_name?.trim()) {
+      triggerToast('Full name is required.', 'warning');
+      return;
+    }
+    if (!form.mobile?.trim()) {
+      triggerToast('Mobile number is required.', 'warning');
+      return;
+    }
+    const cleanMobile = form.mobile.replace(/^(\+91|0)/, '').replace(/\D/g, '');
+    if (!cleanMobile || !/^[6-9]\d{9}$/.test(cleanMobile)) {
+      triggerToast('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9 (e.g. 9876543210).', 'warning');
+      return;
+    }
+    if (!form.email?.trim()) {
+      triggerToast('Donor email address is required.', 'warning');
+      return;
+    }
+    const emailTrimmed = (form.email || '').trim().toLowerCase();
+    if (!addOtpVerified || emailTrimmed !== verifiedEmail.toLowerCase()) {
+      triggerToast('Email verification required. Please click "Send OTP", enter the code, and confirm verification before adding the donor.', 'warning');
+      return;
+    }
+    if (!form.place?.trim() && !form.city?.trim()) {
+      triggerToast('Place / City is required.', 'warning');
+      return;
+    }
+    if (!form.pincode?.trim() || form.pincode.trim().length !== 6) {
+      triggerToast('Valid 6-digit PIN code is required.', 'warning');
+      return;
+    }
+
+    setLoading(true);
+
+    const autoDistrict = currentUser?.district || 'Kozhikode';
+    const placeVal = form.place || form.city || '';
+    const meghalaVal = currentUser?.city || currentUser?.meghala || currentUser?.organization_name || placeVal;
+    const orgVal = currentUser?.organization_name || currentUser?.block || currentUser?.city || '';
+
+    const fd = new FormData();
+    Object.keys(form).forEach(key => {
+      if (form[key] !== null && form[key] !== undefined) {
+        fd.append(key, form[key]);
+      }
+    });
+
+    fd.set('district', autoDistrict);
+    fd.set('place', placeVal);
+    fd.set('city', placeVal);
+    fd.set('meghala', meghalaVal);
+    if (orgVal) {
+      fd.set('organization_name', orgVal);
+    }
+    fd.set('role', 'donor');
+
+    const res = await volunteerAddUser(fd);
+    if (res.success) {
+      setShowAddModal(false);
+      setForm({});
+      setAddMapPos(null);
+      setAddMapAddress('');
+      setShowMapCanvas(false);
+      setAddOtpSent(false);
+      setAddOtpCode('');
+      setAddOtpVerified(false);
+      setVerifiedEmail('');
+      setAddOtpCooldown(0);
+      if (res.user) {
+        setMeghalaUsers(prev => [res.user, ...prev.filter(u => String(u._id || u.id) !== String(res.user._id || res.user.id))]);
+      }
+      await fetchMeghalaUsers();
+    }
+    setLoading(false);
+  };
+
+
+  return (
+    <div className="space-y-6">
+      {/* Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border-slate-200 shadow-sm p-6 rounded-3xl border /80 shadow-xs">
+        <div>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h1 className="text-red-600 uppercase text-xl sm:text-2xl font-black tracking-tight">User Management (Meghala Scope)</h1>
+            <span className="px-2.5 py-0.5 bg-red-50 text-red-700 text-xs font-bold rounded-full border border-red-200">
+              {users.length} Registered
+            </span>
+            {isMeghalaScoped && myMeghala && (
+              <span className="flex items-center gap-1.5 px-2.5 py-0.5 bg-violet-50 text-violet-700 text-xs font-bold rounded-full border border-violet-200">
+                <MapPin className="w-3 h-3" />
+                {currentUser?.meghala || currentUser?.meghalaName || currentUser?.city}
+              </span>
+            )}
+          </div>
+          <p className="text-slate-500 text-xs mt-1">
+            Register new members/donors, view profiles, and perform secure OTP-verified updates.
+          </p>
+        </div>
+
+        <button
+          onClick={() => {
+            const autoDistrict = currentUser?.district || 'Kozhikode';
+            setForm({
+              role: 'donor',
+              blood_group: 'A+',
+              sex: 'male',
+              dob: '',
+              primary_name: '',
+              mobile: '',
+              email: '',
+              place: currentUser?.city || '',
+              city: currentUser?.city || '',
+              pincode: '',
+              district: autoDistrict,
+              latitude: null,
+              longitude: null,
+              profile_picture: null,
+            });
+            setAddMapPos(null);
+            setAddMapAddress('');
+            setShowMapCanvas(false);
+            setAddOtpSent(false);
+            setAddOtpCode('');
+            setAddOtpVerified(false);
+            setVerifiedEmail('');
+            setAddOtpCooldown(0);
+            setShowAddModal(true);
+          }}
+          className="flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-md shadow-red-600/20"
+        >
+          <Plus className="w-4 h-4" /> Add Donor / Member
+        </button>
+      </div>
+
+      {/* Top Summary Cards Bar for Quick Separation */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Total Registered Members */}
+        <button
+          type="button"
+          onClick={() => setActiveTab('all')}
+          className={`p-5 rounded-3xl border text-left transition-all cursor-pointer ${activeTab === 'all'
+              ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/10'
+              : 'bg-white text-slate-900 border-slate-200/80 hover:border-slate-300 shadow-xs'
+            }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className={`text-[11px] font-black uppercase tracking-wider ${activeTab === 'all' ? 'text-slate-300' : 'text-slate-500'}`}>
+              Total Members
+            </span>
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${activeTab === 'all' ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-600'}`}>
+              <Users className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-3xl font-black tracking-tight">{users.length}</span>
+            <span className={`text-xs font-bold ${activeTab === 'all' ? 'text-slate-300' : 'text-slate-400'}`}>Registered</span>
+          </div>
+        </button>
+
+        {/* Pending Verification Card */}
+        <button
+          type="button"
+          onClick={() => setActiveTab('pending')}
+          className={`p-5 rounded-3xl border text-left transition-all cursor-pointer relative overflow-hidden ${activeTab === 'pending'
+              ? 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20 ring-2 ring-amber-500/20'
+              : 'bg-white text-slate-900 border-slate-200/80 hover:border-amber-300 shadow-xs'
+            }`}
+        >
+          {pendingCount > 0 && (
+            <span className="absolute top-4 right-4 w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
+          )}
+          <div className="flex items-center justify-between">
+            <span className={`text-[11px] font-black uppercase tracking-wider ${activeTab === 'pending' ? 'text-amber-100' : 'text-amber-700'}`}>
+              Pending Verification
+            </span>
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${activeTab === 'pending' ? 'bg-white/20 text-white' : 'bg-amber-50 text-amber-600 border border-amber-200/60'}`}>
+              <Clock className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className={`text-3xl font-black tracking-tight ${activeTab === 'pending' ? 'text-white' : 'text-amber-900'}`}>
+              {pendingCount}
+            </span>
+            <span className={`text-xs font-bold ${activeTab === 'pending' ? 'text-amber-100' : 'text-amber-700'}`}>
+              Awaiting Action
+            </span>
+          </div>
+        </button>
+
+        {/* Verified Active Users Card */}
+        <button
+          type="button"
+          onClick={() => setActiveTab('verified')}
+          className={`p-5 rounded-3xl border text-left transition-all cursor-pointer ${activeTab === 'verified'
+              ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20 ring-2 ring-emerald-600/20'
+              : 'bg-white text-slate-900 border-slate-200/80 hover:border-emerald-300 shadow-xs'
+            }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className={`text-[11px] font-black uppercase tracking-wider ${activeTab === 'verified' ? 'text-emerald-100' : 'text-emerald-700'}`}>
+              Verified Active Users
+            </span>
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${activeTab === 'verified' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600 border border-emerald-200/60'}`}>
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className={`text-3xl font-black tracking-tight ${activeTab === 'verified' ? 'text-white' : 'text-emerald-900'}`}>
+              {verifiedCount}
+            </span>
+            <span className={`text-xs font-bold ${activeTab === 'verified' ? 'text-emerald-100' : 'text-emerald-700'}`}>
+              Verified & Active
+            </span>
+          </div>
+        </button>
+      </div>
+
+      {/* Main Content Card */}
+      <div className="bg-white border-slate-200 shadow-sm rounded-3xl border /80 shadow-xs overflow-hidden">
+        {/* Categorized Filter Tabs Bar */}
+        <div className="flex items-center gap-2 p-3 bg-slate-50/80 border-b border-slate-200/80 overflow-x-auto">
+          <button
+            type="button"
+            onClick={() => setActiveTab('all')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${activeTab === 'all'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200/60'
+              }`}
+          >
+            <Users className="w-4 h-4" />
+            All Members ({users.length})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('pending')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${activeTab === 'pending'
+                ? 'bg-amber-500 text-white shadow-xs border border-amber-500'
+                : 'bg-amber-50/60 text-amber-800 hover:bg-amber-100 border border-amber-200/80'
+              }`}
+          >
+            <Clock className="w-4 h-4 text-amber-600" />
+            Pending Verification ({pendingCount})
+            {pendingCount > 0 && (
+              <span className="px-2 py-0.5 bg-amber-600 text-white text-[10px] font-black rounded-full">
+                {pendingCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('verified')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${activeTab === 'verified'
+                ? 'bg-emerald-600 text-white shadow-xs border border-emerald-600'
+                : 'bg-emerald-50/60 text-emerald-800 hover:bg-emerald-100 border border-emerald-200/80'
+              }`}
+          >
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            Verified Users ({verifiedCount})
+          </button>
+        </div>
+
+        {/* Pending Verification Banner Alert */}
+        {activeTab === 'pending' && (
+          <div className="bg-amber-50 border-b border-amber-200/90 p-4 px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-900 text-xs font-bold animate-fade-in">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+              </div>
+              <div>
+                <p className="font-extrabold text-amber-900">Pending Verification Action Required</p>
+                <p className="text-[11px] text-amber-700 font-medium">
+                  Review member profiles below and click <span className="font-bold text-emerald-700">"Verify & Accept"</span> to activate accounts and email login passwords.
+                </p>
+              </div>
+            </div>
+            <span className="self-start sm:self-auto px-3 py-1 bg-amber-200/80 text-amber-900 text-[10px] font-black uppercase tracking-wider rounded-full border border-amber-300 shrink-0">
+              {pendingCount} Pending Approval
+            </span>
+          </div>
+        )}
+
+        {/* Filter Toolbar */}
+        <FilterBar
+          search={search} onSearch={setSearch}
+          searchPlaceholder="Search by name, email, phone, city..."
+          filters={[
+            { key: 'status', label: 'Status', options: STATUS_OPTIONS.map(s => ({ value: s, label: s.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase()) })) },
+            { key: 'role', label: 'Role', options: ROLES.map(r => ({ value: r, label: r.charAt(0).toUpperCase() + r.slice(1) })) },
+          ]}
+          filterValues={filters}
+          onFilterChange={(k, v) => setFilters(f => ({ ...f, [k]: v }))}
+          onReset={() => { setSearch(''); setFilters({ status: 'all', role: 'all' }); }}
+        />
+
+        {/* Minimal Modern Table */}
+        <div className="overflow-x-auto">
+          {filtered.length === 0 ? (
+            <div className="py-16 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 mx-auto mb-3">
+                <Users className="w-6 h-6" />
+              </div>
+              <p className="text-slate-700 font-bold text-sm">No Users Found</p>
+              <p className="text-slate-400 text-xs mt-1">Try adjusting your search terms or filters.</p>
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="py-4 px-6">User & Profile</th>
+                  <th className="py-4 px-6">Blood Group</th>
+                  <th className="py-4 px-6">Mobile Contact</th>
+                  <th className="py-4 px-6">User Role</th>
+                  <th className="py-4 px-6">District / City</th>
+                  <th className="py-4 px-6 text-center">Status</th>
+                  <th className="py-4 px-6 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs">
+                {filtered.map((u) => {
+                  const displayName = u.primaryName || u.name || 'User';
+                  const pic = u.profilePicture || u.profile_picture;
+
+                  return (
+                    <motion.tr
+                      key={u._id || u.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="hover:bg-red-50/20 transition"
+                    >
+                      {/* Avatar & Name */}
+                      <td className="py-4 px-6 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={getStorageUrl(pic) || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName)}`}
+                            alt={displayName}
+                            onError={(e) => { e.target.onerror = null; e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName)}`; }}
+                            className="w-9 h-9 rounded-xl object-cover border border-slate-200 shadow-xs"
+                          />
+                          <div>
+                            <p className="text-slate-900 text-xs font-bold">{displayName}</p>
+                            <p className="text-slate-500 text-[11px] font-mono mt-0.5">{u.email}</p>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Creative Blood Group Pill */}
+                      <td className="py-4 px-6 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border border-red-200/80 shadow-2xs">
+                          <Droplet className="w-3.5 h-3.5 text-red-600 fill-red-600 animate-pulse" />
+                          {u.bloodGroup || u.blood_group || 'N/A'}
+                        </span>
+                      </td>
+
+                      {/* Phone */}
+                      <td className="py-4 px-6 whitespace-nowrap">
+                        <div className="flex items-center gap-1 text-slate-700 font-mono font-medium">
+                          <Phone className="w-3 h-3 text-slate-400" />
+                          <span>{u.mobile || '—'}</span>
+                        </div>
+                      </td>
+
+                      {/* Role */}
+                      <td className="py-4 px-6 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 border border-blue-200 text-blue-700 uppercase tracking-wider">
+                          {u.role || 'User'}
+                        </span>
+                      </td>
+
+                      {/* Location */}
+                      <td className="py-4 px-6 whitespace-nowrap text-slate-600">
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{u.city ? `${u.city}, ` : ''}{u.district || '—'}</span>
+                        </div>
+                      </td>
+
+                      {/* Status */}
+                      <td className="py-4 px-6 text-center whitespace-nowrap">
+                        <StatusBadge status={u.status || 'Active'} isVerified={u.is_verified || u.isVerified} />
+                      </td>
+
+                      {/* Actions */}
+                      <td className="py-4 px-6 text-right space-x-1.5 whitespace-nowrap">
+                        {/* Verify & Accept User Button (Only for Meghala Volunteer / Admin, NOT Unit Squad) */}
+                        {(currentUser?.role || '').toLowerCase() !== 'unit_squad' && (u.status !== 'Active' && u.status !== 'active') && (
+                          <button
+                            onClick={() => handleVerifyUser(u)}
+                            disabled={verifyingUserId === (u._id || u.id)}
+                            className="px-2.5 py-1.5 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl transition cursor-pointer inline-flex items-center gap-1 font-bold text-xs shadow-2xs"
+                            title="Verify & Accept User (Password sent directly to email)"
+                          >
+                            {verifyingUserId === (u._id || u.id) ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+                            ) : (
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                            )}
+                            Verify & Accept
+                          </button>
+                        )}
+
+                        {/* Reject Button (Only for Meghala Volunteer / Admin, NOT Unit Squad) */}
+                        {(currentUser?.role || '').toLowerCase() !== 'unit_squad' && (u.status !== 'Active' && u.status !== 'active' && u.status !== 'Rejected' && u.status !== 'rejected') && (
+                          <button
+                            onClick={async () => {
+                              const userId = u._id || u.id;
+                              setRejectingUserId(userId);
+                              await volunteerRejectUser(userId, 'Registration rejected by Meghala Committee.');
+                              setRejectingUserId(null);
+                            }}
+                            disabled={rejectingUserId === (u._id || u.id)}
+                            className="px-2.5 py-1.5 text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-300 rounded-xl transition cursor-pointer inline-flex items-center gap-1 font-bold text-xs shadow-2xs disabled:opacity-50"
+                            title="Reject User Registration"
+                          >
+                            {rejectingUserId === (u._id || u.id) ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-600" />
+                            ) : (
+                              <X className="w-3.5 h-3.5 text-rose-600" />
+                            )}
+                            Reject
+                          </button>
+                        )}
+
+                        {/* View Button */}
+                        <button
+                          onClick={() => { setSelectedUser(u); setShowViewModal(true); }}
+                          className="px-2.5 py-1.5 text-slate-600 hover:text-blue-600 border border-slate-200 hover:border-blue-200 rounded-xl hover:bg-blue-50 transition cursor-pointer inline-flex items-center gap-1 font-bold text-xs"
+                          title="View Details"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-blue-600" /> View
+                        </button>
+
+                        {/* Secure Edit Button */}
+                        <button
+                          onClick={() => {
+                            setSelectedUser(u);
+                            setOtpSent(false);
+                            setOtpVerified(false);
+                            setOtpCode('');
+                            setShowEditModal(true);
+                          }}
+                          className="px-2.5 py-1.5 text-slate-700 hover:text-red-600 border border-slate-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition cursor-pointer inline-flex items-center gap-1 font-bold text-xs"
+                          title="Secure Edit (OTP)"
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5 text-red-600" /> Secure Edit
+                        </button>
+
+                        {/* Delete Button */}
+                        <button
+                          onClick={() => setConfirmModal({ open: true, item: u })}
+                          className="px-2.5 py-1.5 text-slate-400 hover:text-red-600 border border-slate-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition cursor-pointer inline-flex items-center gap-1 font-bold text-xs"
+                          title="Delete User"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Delete
+                        </button>
+                      </td>
+                    </motion.tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      {/* View Modal with Creative Blood Group Design */}
+      <AnimatePresence>
+        {showViewModal && selectedUser && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-900/65 backdrop-blur-md z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+              className="bg-white border-slate-200 shadow-sm rounded-3xl w-full max-w-md shadow-2xl overflow-hidden relative border"
+            >
+              {/* Creative Crimson Header Banner */}
+              <div className="h-32 bg-gradient-to-r from-red-600 via-rose-600 to-red-800 relative overflow-hidden p-6 flex justify-between items-start">
+                {/* Background Art Pattern */}
+                <div className="absolute -right-8 -bottom-12 opacity-20 text-white pointer-events-none">
+                  <Droplet className="w-48 h-48 fill-white" />
+                </div>
+                <div className="relative z-10">
+                  <h3 className="text-xl font-black text-white mt-1.5 tracking-tight truncate max-w-[260px]">
+                    {selectedUser.primaryName || selectedUser.name || 'User Profile'}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setShowViewModal(false)}
+                  className="relative z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white backdrop-blur-md transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Floating Avatar & High-End Creative Blood Group Badge */}
+              <div className="px-6 relative -mt-10 pb-2">
+                <div className="flex items-end justify-between">
+                  {/* User Profile Avatar */}
+                  <div className="relative">
+                    {selectedUser.profilePicture || selectedUser.profile_picture ? (
+                      <img
+                        src={getStorageUrl(selectedUser.profilePicture || selectedUser.profile_picture)}
+                        alt={selectedUser.primaryName}
+                        onError={(e) => { e.target.onerror = null; e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(selectedUser.primaryName || 'User')}`; }}
+                        className="w-20 h-20 rounded-2xl object-cover border-4 border-white shadow-xl bg-white"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 bg-gradient-to-tr from-red-600 to-rose-600 text-white rounded-2xl flex items-center justify-center font-black text-2xl shadow-xl border-4 border-white">
+                        {(selectedUser.primaryName || selectedUser.name || 'U')[0].toUpperCase()}
+                      </div>
+                    )}
+                    <span className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white ${selectedUser.status === 'Active' || selectedUser.status === 'active' ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                  </div>
+
+                  {/* CREATIVE BLOOD GROUP BADGE */}
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="bg-gradient-to-br from-red-600 via-rose-600 to-red-800 text-white px-4 py-2.5 rounded-2xl shadow-xl shadow-red-600/30 border border-red-400/40 flex items-center gap-3 relative overflow-hidden"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shrink-0">
+                      <Droplet className="w-6 h-6 text-white fill-white animate-pulse" />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-red-100/90 leading-none">
+                        Blood Group
+                      </p>
+                      <p className="text-2xl font-black text-white tracking-tight mt-0.5 leading-none">
+                        {selectedUser.bloodGroup || selectedUser.blood_group || 'N/A'}
+                      </p>
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Subtitle Role & Status */}
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="text-xs font-extrabold text-slate-800 capitalize bg-slate-100 px-2.5 py-0.5 rounded-md">
+                    {selectedUser.role || 'Member'}
+                  </span>
+                  <span className="text-slate-300">•</span>
+                  <StatusBadge status={selectedUser.status || 'Active'} />
+                </div>
+              </div>
+
+              {/* User Details Grid */}
+              <div className="px-6 pb-6 pt-3 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-slate-50/80 border p-3 rounded-2xl hover:bg-white border-slate-200 shadow-sm hover: transition-all shadow-xs">
+                    <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                      <Mail className="w-3 h-3 text-red-500" /> Email Address
+                    </p>
+                    <p className="text-xs font-bold text-slate-800 truncate" title={selectedUser.email}>
+                      {selectedUser.email || 'N/A'}
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-50/80 border p-3 rounded-2xl hover:bg-white border-slate-200 shadow-sm hover: transition-all shadow-xs">
+                    <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                      <Phone className="w-3 h-3 text-red-500" /> Contact Number
+                    </p>
+                    {selectedUser.mobile ? (
+                      <a href={`tel:${selectedUser.mobile}`} className="text-xs font-bold text-red-600 font-mono hover:underline block truncate">
+                        {selectedUser.mobile}
+                      </a>
+                    ) : (
+                      <p className="text-xs font-bold text-slate-800 font-mono">N/A</p>
+                    )}
+                  </div>
+
+                  <div className="bg-slate-50/80 border p-3 rounded-2xl hover:bg-white border-slate-200 shadow-sm hover: transition-all shadow-xs">
+                    <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                      <MapPin className="w-3 h-3 text-red-500" /> District
+                    </p>
+                    <p className="text-xs font-bold text-slate-800">
+                      {selectedUser.district || '—'}
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-50/80 border p-3 rounded-2xl hover:bg-white border-slate-200 shadow-sm hover: transition-all shadow-xs">
+                    <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                      <MapPin className="w-3 h-3 text-red-500" /> City / Location
+                    </p>
+                    <p className="text-xs font-bold text-slate-800">
+                      {selectedUser.city || '—'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer Action Buttons */}
+                <div className="pt-2 space-y-2">
+                  {(currentUser?.role || '').toLowerCase() !== 'unit_squad' && (selectedUser.status !== 'Active' && selectedUser.status !== 'active') && (
+                    <button
+                      onClick={() => handleVerifyUser(selectedUser)}
+                      disabled={verifyingUserId === (selectedUser._id || selectedUser.id)}
+                      className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl font-extrabold text-xs shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                    >
+                      {verifyingUserId === (selectedUser._id || selectedUser.id) ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      ) : (
+                        <ShieldCheck className="w-4 h-4 text-white" />
+                      )}
+                      Verify & Accept User (Sends Password directly to User Email)
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      setShowViewModal(false);
+                      openEditModal(selectedUser);
+                    }}
+                    className="w-full py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white rounded-2xl font-extrabold text-xs shadow-lg shadow-red-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Lock className="w-4 h-4 text-white" /> Secure Edit Profile (OTP Required)
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Secure Edit Modal */}
+      <AnimatePresence>
+        {showEditModal && selectedUser && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-white rounded-3xl p-6 w-full max-w-lg max-h-[92vh] flex flex-col shadow-2xl relative">
+              <button onClick={() => setShowEditModal(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-500 hover:bg-slate-100 transition-colors"><X className="w-4 h-4" /></button>
+
+              <div className="mb-4 shrink-0 pr-6">
+                <h3 className="text-xl font-black text-gray-900 flex items-center gap-2">
+                  <ShieldCheck className="w-6 h-6 text-primary" /> Secure Profile Edit
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">Editing {selectedUser.primaryName}'s profile</p>
+              </div>
+
+              <div className="overflow-y-auto pr-2 flex-1 scrollbar-thin">
+
+                {!otpVerified ? (
+                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center">
+                    <div className="w-16 h-16 bg-white border-slate-200 shadow-sm rounded-full flex items-center justify-center mx-auto mb-4 border">
+                      <KeyRound className="w-8 h-8 text-amber-500" />
+                    </div>
+                    <h4 className="font-bold text-gray-900 mb-2">Authorization Required</h4>
+                    <p className="text-xs text-gray-600 mb-6 px-4">
+                      To edit a user's details, you must first verify their consent via OTP sent to <b>{selectedUser.email}</b>.
+                    </p>
+
+                    {!otpSent ? (
+                      <button
+                        onClick={handleSendOtp}
+                        disabled={loading}
+                        className="w-full py-3 bg-gradient-to-r from-primary to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-200 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                      >
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Mail className="w-5 h-5" />}
+                        Send OTP Code
+                      </button>
+                    ) : (
+                      <div className="space-y-4 animate-fade-in-up">
+                        <div className="bg-green-50 text-green-700 text-xs font-bold p-3 rounded-xl border border-green-100">
+                          Code sent! Please ask the user for the 6-digit OTP.
+                        </div>
+                        <input
+                          type="text"
+                          maxLength={6}
+                          placeholder="Enter 6-digit OTP"
+                          value={otpCode}
+                          onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                          className="w-full text-center tracking-[0.5em] font-mono text-xl py-4 bg-white border-slate-200 shadow-sm border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                        />
+                        <button
+                          onClick={handleVerifyOtp}
+                          disabled={loading || otpCode.length !== 6}
+                          className="w-full py-3 bg-gray-900 hover:bg-black text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                        >
+                          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Verify Code & Unlock'}
+                        </button>
+                        <button
+                          onClick={handleSendOtp}
+                          className="text-xs font-bold text-primary hover:underline cursor-pointer"
+                        >
+                          Resend OTP
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <form onSubmit={handleUpdateSubmit} className="space-y-4 animate-fade-in-up">
+                    <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-xl mb-4 flex items-center gap-2">
+                      <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                      <p className="text-xs font-bold text-emerald-700">Access Granted. You may now edit the details.</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-2 flex flex-col items-center pb-2 border-b border-slate-100">
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 text-center w-full">
+                          Update Profile Picture
+                        </label>
+                        {form.profile_picture ? (
+                          <div className="flex flex-col items-center gap-2">
+                            <img
+                              src={
+                                form.profile_picture instanceof File
+                                  ? URL.createObjectURL(form.profile_picture)
+                                  : getStorageUrl(form.profile_picture)
+                              }
+                              alt="Profile Preview"
+                              onError={(e) => { e.target.onerror = null; e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=User`; }}
+                              className="w-20 h-20 rounded-2xl object-cover border-2 border-red-200 shadow-sm"
+                            />
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={handleReCropExisting}
+                                className="px-2.5 py-1 text-xs font-bold text-slate-700 hover:text-red-600 bg-slate-100 hover:bg-slate-200 rounded-lg flex items-center gap-1 cursor-pointer transition"
+                              >
+                                <Crop className="w-3.5 h-3.5 text-red-600" /> Crop / Adjust
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setForm({ ...form, profile_picture: null })}
+                                className="text-xs font-bold text-red-600 hover:text-red-700 flex items-center gap-1 cursor-pointer"
+                              >
+                                <X className="w-3.5 h-3.5" /> Remove
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <label className="w-full flex flex-col items-center justify-center p-4 bg-slate-50 border-2 border-dashed border-slate-200 hover:border-red-400 rounded-2xl cursor-pointer transition-colors group">
+                            <Upload className="w-5 h-5 text-slate-400 group-hover:text-red-600 transition-colors mb-1" />
+                            <span className="text-xs font-bold text-slate-700 group-hover:text-red-600 transition-colors">
+                              Click to Upload & Crop Profile Picture
+                            </span>
+                            <span className="text-[10px] text-slate-400 mt-0.5">Supports JPG, PNG, WEBP</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  handleImageSelectedForCrop(e.target.files[0]);
+                                  e.target.value = '';
+                                }
+                              }}
+                            />
+                          </label>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Primary Name</label>
+                        <input type="text" value={form.primary_name || ''} onChange={e => setForm({ ...form, primary_name: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" required />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Blood Group</label>
+                        <select value={form.blood_group || 'N/A'} onChange={e => setForm({ ...form, blood_group: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                          {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'N/A'].map(bg => <option key={bg} value={bg}>{bg}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Mobile</label>
+                        <input
+                          type="tel"
+                          maxLength={10}
+                          value={form.mobile || ''}
+                          onChange={e => setForm({ ...form, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                          className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-mono"
+                          required
+                          placeholder="10-digit mobile number"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Email</label>
+                        <input type="email" value={form.email || ''} onChange={e => setForm({ ...form, email: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" required />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">City</label>
+                        <input type="text" value={form.city || ''} onChange={e => setForm({ ...form, city: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">District</label>
+                        <input type="text" value={form.district || ''} onChange={e => setForm({ ...form, district: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
+                      </div>
+                    </div>
+
+                    <button type="submit" disabled={loading} className="w-full mt-4 py-3 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl shadow-lg shadow-red-200 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70">
+                      {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />} Save Changes
+                    </button>
+                  </form>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Add User Modal */}
+      <AnimatePresence>
+        {showAddModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-white border-slate-200 shadow-sm rounded-2xl w-full max-w-lg max-h-[92vh] flex flex-col shadow-2xl overflow-hidden border relative">
+              {/* Modal Header Red Banner */}
+              <div className="bg-red-600 p-6 relative overflow-hidden shrink-0">
+                <div className="relative z-10 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-white">
+                      <Plus className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-white text-lg font-black tracking-tight">Add New Donor / Member</h3>
+                      <p className="text-red-100 text-[10px] font-medium">Verify donor email via OTP to confirm credentials & activate account</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowAddModal(false)}
+                    className="w-8 h-8 flex items-center justify-center rounded-xl text-white/70 hover:text-white hover:bg-white/20 transition-all cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 overflow-y-auto flex-1 scrollbar-thin">
+                <form onSubmit={handleAddSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2 flex flex-col items-center pb-2 border-b border-slate-100">
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 text-center w-full">
+                        Profile Picture *
+                      </label>
+                      {form.profile_picture ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <img
+                            src={typeof form.profile_picture === 'string' ? form.profile_picture : URL.createObjectURL(form.profile_picture)}
+                            alt="Profile Preview"
+                            className="w-24 h-24 rounded-2xl object-cover border-2 border-red-200 shadow-sm"
+                          />
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={handleReCropExisting}
+                              className="px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-red-600 bg-slate-100 hover:bg-slate-200 rounded-xl flex items-center gap-1.5 cursor-pointer transition"
+                            >
+                              <Crop className="w-3.5 h-3.5 text-red-600" /> Crop / Adjust Image
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setForm({ ...form, profile_picture: null })}
+                              className="text-xs font-bold text-red-600 hover:text-red-700 flex items-center gap-1 cursor-pointer"
+                            >
+                              <X className="w-3.5 h-3.5" /> Remove Photo
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <label className="w-full flex flex-col items-center justify-center p-5 bg-slate-50 border-2 border-dashed border-slate-200 hover:border-red-400 rounded-2xl cursor-pointer transition-colors group">
+                          <Upload className="w-6 h-6 text-slate-400 group-hover:text-red-600 transition-colors mb-1.5" />
+                          <span className="text-xs font-bold text-slate-700 group-hover:text-red-600 transition-colors">
+                            Click to upload & crop Profile Picture *
+                          </span>
+                          <span className="text-[10px] text-slate-400 mt-0.5">Supports JPG, PNG, WEBP</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                handleImageSelectedForCrop(e.target.files[0]);
+                                e.target.value = '';
+                              }
+                            }}
+                          />
+                        </label>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Blood Group *</label>
+                      <select value={form.blood_group || 'A+'} onChange={e => setForm({ ...form, blood_group: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" required>
+                        {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => <option key={bg} value={bg}>{bg}</option>)}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Gender / Sex *</label>
+                      <select value={form.sex || 'male'} onChange={e => setForm({ ...form, sex: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" required>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="transgender">Transgender</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase">Date of Birth *</label>
+                        <span className="text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded border border-red-100">18+ Years Only</span>
+                      </div>
+                      <input
+                        type="date"
+                        max={getEighteenYearsAgoDate()}
+                        value={form.dob || ''}
+                        onChange={e => setForm({ ...form, dob: e.target.value })}
+                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                        required
+                      />
+                      <p className="text-[9px] text-slate-400 mt-0.5">Only 18+ years old allowed</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Primary Name *</label>
+                      <input type="text" value={form.primary_name || ''} onChange={e => setForm({ ...form, primary_name: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" required placeholder="Enter primary name" />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Mobile *</label>
+                      <input
+                        type="tel"
+                        maxLength={10}
+                        value={form.mobile || ''}
+                        onChange={e => setForm({ ...form, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-mono"
+                        required
+                        placeholder="10-digit mobile number (e.g. 9876543210)"
+                      />
+                    </div>
+
+                    {/* Donor Email Field with Integrated OTP Verification */}
+                    <div className="col-span-2 bg-slate-50/90 border border-slate-200/90 p-4 rounded-2xl space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-[10px] font-extrabold text-gray-600 uppercase tracking-wider">
+                          Donor Email Address *
+                        </label>
+                        {addOtpVerified && form.email && form.email.trim().toLowerCase() === verifiedEmail.toLowerCase() ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Email Verified
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                            <AlertTriangle className="w-3 h-3 text-amber-600" /> OTP Verification Required
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          <input
+                            type="email"
+                            value={form.email || ''}
+                            disabled={addOtpVerified}
+                            onChange={(e) => {
+                              const newEmail = e.target.value;
+                              setForm({ ...form, email: newEmail });
+                              if (addOtpVerified && newEmail.trim().toLowerCase() !== verifiedEmail.toLowerCase()) {
+                                setAddOtpVerified(false);
+                                setAddOtpSent(false);
+                                setVerifiedEmail('');
+                              }
+                            }}
+                            className={`w-full pl-10 pr-3 py-2.5 bg-white border rounded-xl text-sm font-semibold outline-none transition-all ${addOtpVerified
+                                ? 'border-emerald-300 text-emerald-900 bg-emerald-50/40 cursor-not-allowed'
+                                : 'border-slate-200 text-slate-900 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+                              }`}
+                            required
+                            placeholder="donor@example.com"
+                          />
+                        </div>
+
+                        {!addOtpVerified ? (
+                          <button
+                            type="button"
+                            onClick={handleSendAddOtp}
+                            disabled={addOtpLoading || addOtpCooldown > 0 || !form.email?.trim()}
+                            className="px-4 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shrink-0 shadow-sm cursor-pointer disabled:cursor-not-allowed"
+                            title={addOtpCooldown > 0 ? `Wait ${addOtpCooldown}s before resending` : 'Send OTP to donor email'}
+                          >
+                            {addOtpLoading ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <KeyRound className="w-3.5 h-3.5" />
+                            )}
+                            {addOtpCooldown > 0
+                              ? `Resend (${addOtpCooldown}s)`
+                              : (addOtpSent ? 'Resend OTP' : 'Send OTP')}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAddOtpVerified(false);
+                              setAddOtpSent(false);
+                              setAddOtpCode('');
+                              setVerifiedEmail('');
+                            }}
+                            className="px-3 py-2 text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition cursor-pointer"
+                          >
+                            Change
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Interactive OTP Entry Box */}
+                      {addOtpSent && !addOtpVerified && (
+                        <div className="p-3.5 bg-red-50/80 border border-red-200 rounded-xl space-y-2.5 animate-fade-in-up">
+                          <div className="flex items-center justify-between text-xs">
+                            <p className="font-bold text-red-900">
+                              Enter the 6-digit OTP sent to <span className="font-mono underline">{form.email}</span>
+                            </p>
+                            <span className="text-[10px] text-red-600 font-semibold">Expires in 10m</span>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              maxLength={6}
+                              value={addOtpCode}
+                              onChange={(e) => setAddOtpCode(e.target.value.replace(/\D/g, ''))}
+                              placeholder="6-digit OTP"
+                              className="w-full text-center tracking-[0.4em] font-mono text-base font-bold py-2 bg-white border border-red-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleVerifyAddOtp}
+                              disabled={addOtpLoading || addOtpCode.trim().length !== 6}
+                              className="px-5 py-2 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shrink-0 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                            >
+                              {addOtpLoading ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                              )}
+                              Verify OTP
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Verification Success Box */}
+                      {addOtpVerified && (
+                        <div className="flex items-center gap-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-bold text-emerald-800 animate-fade-in-up">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>Donor email verified successfully! You can now complete and submit registration.</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Place & Location Map Search Section */}
+                    <div className="col-span-2 bg-slate-50/90 border border-slate-200/90 p-4 rounded-2xl space-y-3">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <label className="block text-[10px] font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-red-600" /> Place / Map Search
+                        </label>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={handleUseGPS}
+                            disabled={gpsLoading}
+                            className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100/80 px-2.5 py-1 rounded-lg border border-emerald-200/60 transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50 shadow-2xs"
+                            title="Auto-detect current GPS location"
+                          >
+                            {gpsLoading ? (
+                              <Loader2 className="w-3 h-3 animate-spin text-emerald-600" />
+                            ) : (
+                              <Crosshair className="w-3 h-3 text-emerald-600" />
+                            )}
+                            <span>{gpsLoading ? 'Detecting GPS...' : 'Use My GPS'}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowMapCanvas(!showMapCanvas)}
+                            className="text-[10px] font-bold text-red-600 hover:text-red-700 flex items-center gap-1 bg-red-50 hover:bg-red-100/80 px-2.5 py-1 rounded-lg border border-red-200/60 transition cursor-pointer"
+                          >
+                            <MapIcon className="w-3 h-3" />
+                            {showMapCanvas ? 'Hide Map View' : 'Pick on Map'}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Photon / Kerala places autocomplete search */}
+                      <div className="relative">
+                        <LocationSearchInput
+                          initialValue={form.place || form.city || ''}
+                          onSelectLocation={(loc) => {
+                            if (!loc) {
+                              setAddMapPos(null);
+                              setAddMapAddress('');
+                              return;
+                            }
+                            const pos = { lat: loc.lat, lng: loc.lng };
+                            setAddMapPos(pos);
+                            setAddMapAddress(loc.displayName || loc.name || '');
+
+                            const placeName = loc.city || loc.name || (loc.displayName ? loc.displayName.split(',')[0].trim() : '');
+                            const pincodeVal = loc.postcode || loc.address?.postcode || form.pincode || '';
+
+                            setForm(prev => ({
+                              ...prev,
+                              place: placeName || prev.place,
+                              city: placeName || prev.city,
+                              pincode: pincodeVal ? String(pincodeVal).replace(/\D/g, '').slice(0, 6) : prev.pincode,
+                              latitude: loc.lat || prev.latitude,
+                              longitude: loc.lng || prev.longitude,
+                            }));
+                          }}
+                          placeholder="Search Kerala place, town, hospital, landmark (Photon OSM)..."
+                        />
+                      </div>
+
+                      {/* Collapsible Interactive Map Canvas */}
+                      {showMapCanvas && (
+                        <div className="rounded-xl overflow-hidden border border-slate-200/80 shadow-inner bg-slate-100 animate-in fade-in duration-200">
+                          <div className="h-[200px] w-full relative z-0">
+                            <MapLibreContainer
+                              isPicker={true}
+                              pickerLocation={addMapPos}
+                              center={addMapPos || { lat: 11.2588, lng: 75.7804 }}
+                              zoom={addMapPos ? 14 : 10}
+                              onLocationPicked={(loc) => {
+                                const pos = { lat: loc.lat, lng: loc.lng };
+                                setAddMapPos(pos);
+                                setAddMapAddress(loc.displayName || '');
+
+                                const placeName = loc.city || loc.address?.suburb || loc.address?.town || loc.address?.village || (loc.displayName ? loc.displayName.split(',')[0].trim() : '');
+                                const pincodeVal = loc.postcode || loc.address?.postcode || form.pincode || '';
+
+                                setForm(prev => ({
+                                  ...prev,
+                                  place: placeName || prev.place,
+                                  city: placeName || prev.city,
+                                  pincode: pincodeVal ? String(pincodeVal).replace(/\D/g, '').slice(0, 6) : prev.pincode,
+                                  latitude: loc.lat,
+                                  longitude: loc.lng,
+                                }));
+                              }}
+                              height="100%"
+                            />
+                          </div>
+                          <div className="p-2 bg-slate-100/90 text-[10px] text-slate-500 font-medium flex items-center justify-between">
+                            <span>📍 Click anywhere on the map to pin and reverse-geocode place</span>
+                            {addMapPos && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAddMapPos(null);
+                                  setAddMapAddress('');
+                                }}
+                                className="text-red-600 font-bold hover:underline cursor-pointer"
+                              >
+                                Reset Pin
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Picked Address Banner */}
+                      {addMapAddress ? (
+                        <div className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-2 animate-in fade-in duration-150">
+                          <Navigation className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] text-emerald-800 font-bold leading-tight truncate">
+                              {addMapAddress}
+                            </p>
+                            {addMapPos && (
+                              <p className="text-[9px] text-emerald-600 font-mono mt-0.5">
+                                Coordinates: {Number(addMapPos.lat).toFixed(4)}, {Number(addMapPos.lng).toFixed(4)}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAddMapPos(null);
+                              setAddMapAddress('');
+                            }}
+                            className="text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                            title="Clear selection"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Place / City *</label>
+                      <input type="text" value={form.place || form.city || ''} onChange={e => setForm({ ...form, place: e.target.value, city: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all font-semibold" placeholder="Enter place / city" required />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">PIN Code *</label>
+                      <input type="text" value={form.pincode || ''} onChange={e => setForm({ ...form, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) })} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all font-mono font-semibold" maxLength={6} placeholder="6-digit pincode" required />
+                    </div>
+                    <div className="col-span-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase">District *</label>
+                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                          <Lock className="w-2.5 h-2.5 text-emerald-600" /> Auto-Fixed from Super Admin Scope
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        value={form.district || currentUser?.district || 'Kozhikode'}
+                        readOnly
+                        disabled
+                        className="w-full p-3 bg-slate-100 text-slate-700 font-bold border border-slate-200 rounded-xl text-sm outline-none cursor-not-allowed select-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-3 mt-4 border-t border-slate-100">
+                    <button type="button" onClick={() => setShowAddModal(false)}
+                      className="flex-1 py-3 bg-white border-slate-200 shadow-sm border text-slate-600 text-xs font-bold rounded-2xl hover:bg-slate-50 hover:text-slate-900 transition-all cursor-pointer">
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading || !addOtpVerified}
+                      className={`flex-1 py-3 text-white text-xs font-bold rounded-2xl transition-all flex items-center justify-center gap-2 shadow-sm ${addOtpVerified
+                          ? 'bg-red-600 hover:bg-red-700 cursor-pointer shadow-red-600/20'
+                          : 'bg-slate-400 cursor-not-allowed opacity-70'
+                        }`}
+                    >
+                      {loading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Plus className="w-4 h-4" />
+                      )}
+                      {addOtpVerified ? 'Create User / Donor' : 'Verify Email OTP to Create'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.open}
+        onClose={() => setConfirmModal({ open: false, item: null })}
+        loading={loading}
+        onConfirm={async () => {
+          if (!confirmModal.item) return;
+          setLoading(true);
+          const res = await deleteUser(confirmModal.item._id || confirmModal.item.id);
+          if (res?.success) {
+            await fetchMeghalaUsers();
+          }
+          setLoading(false);
+          setConfirmModal({ open: false, item: null });
+        }}
+        title="Delete User Account"
+        message={`Are you sure you want to permanently delete user "${confirmModal.item?.primaryName || confirmModal.item?.primary_name || confirmModal.item?.name || 'this user'}"? This action cannot be undone.`}
+        confirmLabel="Delete Permanently"
+        variant="danger"
+      />
+
+      {/* Profile Picture Image Cropper Modal */}
+      <ImageCropperModal
+        isOpen={cropperOpen}
+        imageFile={imageToCrop}
+        onClose={() => setCropperOpen(false)}
+        onCropComplete={handleCropComplete}
+        title="Crop & Adjust Donor Profile Picture"
+      />
+    </div>
+  );
+}

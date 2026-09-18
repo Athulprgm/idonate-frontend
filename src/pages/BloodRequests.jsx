@@ -1,0 +1,433 @@
+import { useState, useEffect } from 'react';
+import { useAppStore } from '../store/appStore.js';
+import { useAuthStore } from '../store/authStore.js';
+import RequestCard from '../components/RequestCard.jsx';
+import Modal from '../components/Modal.jsx';
+import { Plus, SlidersHorizontal, Siren, Filter, MapPin, Navigation, X as XIcon, Crosshair, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import PosterModal from '../components/PosterModal.jsx';
+import MapLibreContainer from '../components/MapLibreContainer.jsx';
+import LocationSearchInput from '../components/LocationSearchInput.jsx';
+import { reverseGeocodeNominatim } from '../services/mapService.js';
+
+const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+const URGENCIES = ['Immediate', 'Critical', 'Moderate'];
+
+export default function BloodRequests() {
+  const { requests, fetchRequests, createRequest, triggerToast } = useAppStore();
+  const { user } = useAuthStore();
+  const [filterBG, setFilterBG] = useState('');
+  const [filterUrgency, setFilterUrgency] = useState('');
+  const [filterStatus, setFilterStatus] = useState('Active');
+  const [showModal, setShowModal] = useState(false);
+  const [mapPos, setMapPos] = useState(null);
+  const [mapPickedAddress, setMapPickedAddress] = useState('');
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [form, setForm] = useState({
+    patientName: '',
+    bloodGroup: 'B+',
+    hospitalName: '',
+    city: '',
+    district: '',
+    urgencyLevel: 'Moderate',
+    unitsRequired: 1,
+    contactNumber: user?.mobile || '',
+  });
+
+  const handleUseGPS = () => {
+    if (!navigator.geolocation) {
+      triggerToast('Geolocation is not supported by your browser.', 'warning');
+      return;
+    }
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const newPos = { lat, lng };
+        setMapPos(newPos);
+        try {
+          const geo = await reverseGeocodeNominatim(lat, lng);
+          const addressText = geo?.displayName || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+          setMapPickedAddress(addressText);
+          const placeOrHospital = geo?.address?.hospital || geo?.address?.amenity || geo?.city || addressText.split(',')[0];
+          setForm(prev => ({
+            ...prev,
+            hospitalName: placeOrHospital || prev.hospitalName,
+            city: geo?.city || prev.city,
+            district: geo?.district || prev.district
+          }));
+          triggerToast('Current GPS location detected and pinned!', 'success');
+        } catch (err) {
+          console.error('GPS reverse geocode error:', err);
+          setMapPickedAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+          triggerToast('GPS coordinates acquired!', 'success');
+        } finally {
+          setGpsLoading(false);
+        }
+      },
+      (err) => {
+        console.error('GPS Geolocation error:', err);
+        let msg = 'Unable to retrieve your GPS location.';
+        if (err.code === 1) msg = 'Location permission denied. Please allow location access in your browser settings.';
+        else if (err.code === 2) msg = 'GPS location unavailable.';
+        else if (err.code === 3) msg = 'GPS location request timed out.';
+        triggerToast(msg, 'warning');
+        setGpsLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+  useEffect(() => { fetchRequests(); }, [fetchRequests]);
+
+  const filtered = requests.filter((r) => {
+    const reqUserId = String(r.requested_by || r.requestedBy || r.requested_by_id || (r.requester && (r.requester.id || r.requester._id)) || '');
+    const currentUserId = user ? String(user.id || user._id || '') : '';
+    const isOwner = Boolean(currentUserId && reqUserId && reqUserId === currentUserId);
+    const isPrivileged = user && ['admin', 'volunteer', 'super_admin', 'technical_admin', 'block_admin'].includes(user.role);
+    
+    const statusLower = String(r.status || 'pending').toLowerCase().trim();
+    const isPendingApproval = statusLower === 'pending approval' || r.pending_approval === true || r.pendingApproval === true;
+
+    // If pending approval, only the requester and privileged staff can see it until approved
+    if (isPendingApproval && !isOwner && !isPrivileged) {
+      return false;
+    }
+
+    const bg = (r.bloodGroup || r.blood_group || '').toUpperCase().trim();
+    const reqUrg = (r.urgencyLevel || r.urgency_level || '').toLowerCase();
+
+    const matchesBg = !filterBG || bg === filterBG.toUpperCase().trim();
+    const matchesUrgency = !filterUrgency ||
+      (filterUrgency === 'Immediate' && (reqUrg.includes('immediate') || reqUrg.includes('sos'))) ||
+      (filterUrgency === 'Critical' && (reqUrg.includes('critical') || reqUrg.includes('urgent'))) ||
+      (filterUrgency === 'Moderate' && (reqUrg.includes('moderate') || reqUrg.includes('standard') || reqUrg.includes('normal')));
+
+    let matches = matchesBg && matchesUrgency;
+    if (filterStatus && filterStatus !== 'All') {
+      if (filterStatus === 'Active') {
+        matches = matches && ['pending', 'waiting', 'accepted', 'pending approval', 'active', 'in progress', 'urgent'].includes(statusLower);
+      } else if (filterStatus === 'Fulfilled') {
+        matches = matches && ['fulfilled', 'completed'].includes(statusLower);
+      } else if (filterStatus === 'Cancelled') {
+        matches = matches && ['cancelled', 'expired', 'rejected'].includes(statusLower);
+      } else {
+        matches = matches && statusLower === filterStatus.toLowerCase();
+      }
+    }
+    return matches;
+  });
+
+  const [posterReq, setPosterReq] = useState(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.patientName || !form.hospitalName) {
+      triggerToast('Please fill all required fields.', 'warning');
+      return;
+    }
+    const payload = { 
+      ...form, 
+      unitsRequired: Number(form.unitsRequired) || 1,
+      contactNumber: form.contactNumber || user?.mobile || user?.phone || ''
+    };
+    if (mapPos) { payload.latitude = mapPos.lat; payload.longitude = mapPos.lng; }
+    const res = await createRequest(payload);
+    if (res.success) {
+      setShowModal(false);
+      setMapPos(null);
+      setMapPickedAddress('');
+
+      const createdRequest = res.request || res.data?.request || res.data || {};
+      const newReq = {
+        ...createdRequest,
+        patient_name: form.patientName,
+        blood_group: form.bloodGroup,
+        units_required: Number(form.unitsRequired) || 1,
+        hospital_name: form.hospitalName,
+        venue: form.hospitalName,
+        location: form.city || form.district || 'Kerala',
+        city: form.city || user?.city || 'Kasaragod',
+        district: form.district || user?.district || 'Kasaragod',
+        meghala_name: createdRequest.meghala_name || createdRequest.requester_meghala || form.city || user?.city || user?.meghala || '',
+        requester_meghala: createdRequest.requester_meghala || createdRequest.meghala_name || form.city || user?.city || user?.meghala || '',
+        contact_phone: form.contactNumber || user?.mobile || '',
+        urgency_level: form.urgencyLevel,
+        request_id: createdRequest.id || createdRequest._id || res.data?.id || `JL-${Date.now().toString().slice(-4)}`
+      };
+      setPosterReq(newReq);
+      setForm({ 
+        patientName: '', 
+        bloodGroup: 'B+',
+        hospitalName: '', 
+        city: '', 
+        district: '',
+        urgencyLevel: 'Moderate',
+        unitsRequired: 1,
+        contactNumber: user?.mobile || ''
+      });
+      triggerToast('Blood alert posted successfully! Poster ready for download.', 'success');
+      fetchRequests();
+    }
+  };
+
+  const sosCount = requests.filter((r) => {
+    const urg = (r.urgencyLevel || r.urgency_level || '').toLowerCase();
+    const st = String(r.status || '').toLowerCase().trim();
+    return (urg.includes('immediate') || urg.includes('sos')) && ['pending', 'waiting', 'accepted'].includes(st);
+  }).length;
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-black text-gray-900">Blood Requests</h1>
+          <p className="text-sm text-gray-500 mt-1">Active requests across India — respond and save lives</p>
+        </div>
+        <button
+          onClick={() => setShowModal(true)}
+          className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-dark text-white font-bold rounded-2xl shadow-xl shadow-red-200 transition-all text-sm"
+        >
+          <Plus className="w-4 h-4" /> Post Request
+        </button>
+      </div>
+
+      {/* SOS emergency banner */}
+      {sosCount > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="hero-gradient rounded-2xl p-4 flex items-center gap-4 text-white"
+        >
+          <div className="w-10 h-10 bg-white border-slate-200 shadow-sm/20 rounded-xl flex items-center justify-center animate-heartbeat shrink-0">
+            <Siren className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-widest text-red-200 flex items-center gap-1">
+              <Siren className="w-3.5 h-3.5 animate-pulse text-red-200" /> Emergency Alert
+            </p>
+            <p className="font-bold">{sosCount} immediate SOS request{sosCount > 1 ? 's' : ''} need urgent response!</p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Filters */}
+      <div className="card p-4">
+        <div className="flex flex-wrap gap-3 items-center">
+          <SlidersHorizontal className="w-4 h-4 text-gray-400 shrink-0" />
+
+          {/* Blood Group filter */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              onClick={() => setFilterBG('')}
+              className={`px-3 py-1 text-xs font-bold rounded-xl border transition-all ${!filterBG ? 'bg-primary text-white border-primary' : 'bg-white text-gray-500 border-slate-200 hover:border-red-200'}`}
+            >All Groups</button>
+            {BLOOD_GROUPS.map((bg) => (
+              <button
+                key={bg}
+                onClick={() => setFilterBG(filterBG === bg ? '' : bg)}
+                className={`px-3 py-1 text-xs font-bold rounded-xl border transition-all ${filterBG === bg ? 'bg-primary text-white border-primary shadow-md shadow-red-200' : 'bg-white text-gray-600 border-slate-200 hover:border-red-200'}`}
+              >{bg}</button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2 ml-auto flex-wrap">
+            {/* Urgency filter */}
+            <select
+              value={filterUrgency}
+              onChange={(e) => setFilterUrgency(e.target.value)}
+              className="text-xs font-semibold border border-slate-200 rounded-xl px-3 py-2 bg-white text-gray-700"
+            >
+              <option value="">All Urgency</option>
+              {URGENCIES.map((u) => <option key={u} value={u}>{u}</option>)}
+            </select>
+
+            {/* Status toggle */}
+            <div className="flex bg-slate-100 rounded-xl p-0.5 gap-0.5">
+              {['All', 'Active', 'Fulfilled', 'Cancelled'].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setFilterStatus(s)}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${filterStatus === s ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  {s === 'All' ? 'All Statuses' : s}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <p className="text-xs text-gray-400 mt-3 font-semibold">{filtered.length} requests found</p>
+      </div>
+
+      {/* Cards grid */}
+      {filtered.length === 0 ? (
+        <div className="card p-10 text-center text-gray-400">
+          <Filter className="w-10 h-10 mx-auto mb-3 opacity-30" />
+          <p className="text-sm">No requests match your filters.</p>
+        </div>
+      ) : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map((req, i) => (
+            <motion.div key={req.id || req._id || i} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+              <RequestCard request={req} />
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* Post Request Modal */}
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Post Blood Request">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Patient Name *</label>
+              <input type="text" value={form.patientName} onChange={(e) => setForm({ ...form, patientName: e.target.value })}
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-gray-900" placeholder="Full name" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Blood Group *</label>
+              <select value={form.bloodGroup} onChange={(e) => setForm({ ...form, bloodGroup: e.target.value })}
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-gray-900">
+                {BLOOD_GROUPS.map((bg) => <option key={bg} value={bg}>{bg}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Hospital Name *</label>
+            <input type="text" value={form.hospitalName} onChange={(e) => setForm({ ...form, hospitalName: e.target.value })}
+              className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-gray-900" placeholder="Apollo Hospital, Bengaluru" />
+          </div>
+
+          {/* Map Location Picker */}
+          <div className="border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+            <div className="bg-slate-50 px-3 py-2 border-b border-slate-200 flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-red-500" />
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Pick Hospital on OpenStreetMap</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleUseGPS}
+                  disabled={gpsLoading}
+                  className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 shadow-2xs"
+                  title="Detect and Pin My Current GPS Location"
+                >
+                  {gpsLoading ? (
+                    <Loader2 className="w-3 h-3 animate-spin text-emerald-600" />
+                  ) : (
+                    <Crosshair className="w-3 h-3 text-emerald-600" />
+                  )}
+                  <span>{gpsLoading ? 'Detecting GPS...' : 'Use My GPS'}</span>
+                </button>
+                {mapPos && (
+                  <button type="button" onClick={() => { setMapPos(null); setMapPickedAddress(''); }}
+                    className="text-[9px] font-bold text-red-500 hover:text-red-700 bg-red-50 border border-red-200 px-2 py-1 rounded-lg flex items-center gap-0.5 cursor-pointer">
+                    <XIcon className="w-3 h-3" /> Clear
+                  </button>
+                )}
+              </div>
+            </div>
+            {/* Search */}
+            <div className="p-2 bg-white">
+              <LocationSearchInput
+                onSelectLocation={(loc) => {
+                  if (!loc) {
+                    setMapPos(null);
+                    setMapPickedAddress('');
+                    return;
+                  }
+                  const pos = { lat: loc.lat, lng: loc.lng };
+                  setMapPos(pos);
+                  setMapPickedAddress(loc.displayName);
+                  setForm(prev => ({
+                    ...prev,
+                    hospitalName: loc.name || prev.hospitalName,
+                    city: loc.city || prev.city
+                  }));
+                }}
+                placeholder="Search hospital or place (Photon OSM)..."
+              />
+            </div>
+            {/* Map */}
+            <div className="h-[180px] w-full relative z-0">
+              <MapLibreContainer
+                isPicker={true}
+                pickerLocation={mapPos}
+                center={mapPos || { lat: 11.2588, lng: 75.7804 }}
+                zoom={mapPos ? 14 : 10}
+                onLocationPicked={(loc) => {
+                  const pos = { lat: loc.lat, lng: loc.lng };
+                  setMapPos(pos);
+                  setMapPickedAddress(loc.displayName);
+                  setForm(prev => ({
+                    ...prev,
+                    hospitalName: loc.address?.hospital || loc.displayName.split(',')[0] || prev.hospitalName,
+                    city: loc.city || prev.city
+                  }));
+                }}
+                height="100%"
+              />
+            </div>
+            {mapPickedAddress ? (
+              <div className="px-3 py-2 bg-emerald-50 border-t border-emerald-200 flex items-start gap-2">
+                <Navigation className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" />
+                <p className="text-[10px] text-emerald-700 font-semibold leading-snug line-clamp-2">{mapPickedAddress}</p>
+              </div>
+            ) : (
+              <div className="px-3 py-1.5 bg-slate-50 border-t border-slate-100">
+                <p className="text-[10px] text-slate-400 font-medium">📍 Search above (Photon) or click map (Nominatim) to auto-fill hospital & city</p>
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">City</label>
+              <input type="text" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })}
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-gray-900" placeholder="Bengaluru" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Units Required</label>
+              <input type="number" min="1" max="10" value={form.unitsRequired} onChange={(e) => setForm({ ...form, unitsRequired: e.target.value })}
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-gray-900" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Urgency</label>
+              <select value={form.urgencyLevel} onChange={(e) => setForm({ ...form, urgencyLevel: e.target.value })}
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-gray-900">
+                {URGENCIES.map((u) => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Contact Number</label>
+              <input type="tel" value={form.contactNumber} onChange={(e) => setForm({ ...form, contactNumber: e.target.value })}
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-gray-900" placeholder="9876543210" />
+            </div>
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={() => setShowModal(false)}
+              className="flex-1 py-3 border border-slate-200 text-gray-700 font-semibold rounded-2xl text-sm hover:bg-slate-50 transition-colors">
+              Cancel
+            </button>
+            <button type="submit"
+              className="flex-1 py-3 bg-primary hover:bg-primary-dark text-white font-bold rounded-2xl text-sm shadow-xl shadow-red-200 transition-all">
+              Post Request
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Render Poster Modal right after posting request */}
+      <PosterModal
+        isOpen={!!posterReq}
+        onClose={() => setPosterReq(null)}
+        data={posterReq}
+        type="request"
+      />
+    </div>
+  );
+}

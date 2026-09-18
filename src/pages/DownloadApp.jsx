@@ -83,7 +83,7 @@ export default function DownloadApp() {
           iDonate for Mobile
         </h1>
         <p className="text-base text-slate-500 max-w-md mx-auto leading-relaxed">
-          Kerala&apos;s verified voluntary blood donation network. Instant emergency sirens, donor search, and coordination on any device.
+          Kerala&apos;s verified voluntary blood donation network. Instant emergency notifications, donor search, and coordination on any device.
         </p>
         <p className="text-xs text-slate-400 mt-2 font-medium">
           അടിയന്തര രക്തദാന സന്ദേശങ്ങൾ ഫോണിൽ തത്സമയം ലഭിക്കാൻ ആപ്പ് ഉപയോഗിക്കൂ.
@@ -93,21 +93,21 @@ export default function DownloadApp() {
       {/* ── Minimalist Content Container ── */}
       <main className="max-w-2xl mx-auto px-6 space-y-6">
 
-        {/* ── CARD 1: OFFICIAL WEB APP (PWA) ── */}
+        {/* ── CARD 1: PWA WEB APP (AVAILABLE NOW) ── */}
         <div className="bg-white rounded-3xl border border-slate-200/70 p-7 sm:p-9 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-6">
           
           {/* Header Row */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium mb-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span>Ready to install</span>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium mb-1.5 border border-emerald-100">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Available Now • Recommended</span>
               </div>
               <h2 className="text-xl font-semibold text-slate-900 tracking-tight">
-                Official Web App
+                iDonate Web App
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Full emergency functionality today — no app store download required.
+                Instant install on iPhone, Android & Desktop without App Store.
               </p>
             </div>
 
@@ -138,7 +138,7 @@ export default function DownloadApp() {
               <span>Important Message & Details</span>
             </div>
             <p>
-              You do <strong>not</strong> need to wait for Google Play Store. The iDonate Web App works right now on all devices with 100% of emergency alert sirens, real-time blood requests, and donor directories. It uses less than 1 MB of storage and updates automatically.
+              You do <strong>not</strong> need to wait for Google Play Store. The iDonate Web App works right now on all devices with 100% of emergency notifications, real-time blood requests, and donor directories. It uses less than 1 MB of storage and updates automatically.
             </p>
           </div>
 

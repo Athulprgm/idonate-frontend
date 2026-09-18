@@ -32,17 +32,17 @@ export default function DashboardLayout() {
   }, [user, location.pathname, navigate]);
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex h-screen h-[100dvh] w-full overflow-hidden bg-slate-50">
       <Toast />
 
       {/* Sidebar (desktop & mobile) */}
       <Sidebar mobileOpen={isMobileMenuOpen} setMobileOpen={setIsMobileMenuOpen} />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
 
         {/* Top bar */}
-        <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-slate-100 h-14 flex items-center justify-between px-3 sm:px-4 lg:px-6 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+        <header className="shrink-0 z-30 bg-white/95 backdrop-blur-xl border-b border-slate-100 h-14 flex items-center justify-between px-3 sm:px-4 lg:px-6 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
 
           {/* Mobile Menu & Logo */}
           <div className="flex items-center gap-1.5 sm:gap-2 lg:hidden min-w-0">
@@ -95,7 +95,7 @@ export default function DashboardLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-3 sm:p-4 lg:p-6 pb-6 min-h-0 w-full max-w-full overflow-x-hidden">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 pb-6 min-h-0 w-full max-w-full overflow-x-hidden">
           <Outlet />
         </main>
       </div>

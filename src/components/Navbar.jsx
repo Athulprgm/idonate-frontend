@@ -156,7 +156,7 @@ export default function Navbar() {
         </nav>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {user ? (
             <>
               {/* Notifications Dropdown */}
@@ -273,15 +273,20 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setCommunityModalOpen(true)}
-                className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-extrabold rounded-xl transition-all cursor-pointer"
+                className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-extrabold rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0"
               >
-                <Users className="w-3.5 h-3.5 text-red-600" />
+                <Users className="w-3.5 h-3.5 text-red-600 shrink-0" />
                 <span>Enter Community</span>
               </button>
 
-              <InstallButton variant="pill" className="hidden lg:inline-flex" />
+              <div className="hidden lg:flex items-center shrink-0">
+                <InstallButton variant="pill" />
+              </div>
 
-              <Link to="/login" className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors rounded-xl hover:bg-slate-50">
+              <Link
+                to="/login"
+                className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors rounded-xl hover:bg-slate-50 whitespace-nowrap shrink-0"
+              >
                 Sign In
               </Link>
             </>
@@ -290,8 +295,9 @@ export default function Navbar() {
           {/* Mobile Menu Toggle */}
           <button
             type="button"
-            className="md:hidden p-2 text-slate-600 hover:text-red-600 transition-colors cursor-pointer"
+            className="md:hidden p-2 text-slate-600 hover:text-red-600 transition-colors cursor-pointer shrink-0"
             onClick={() => setMobileMenuOpen(true)}
+            aria-label="Open menu"
           >
             <Menu className="w-5 h-5" />
           </button>

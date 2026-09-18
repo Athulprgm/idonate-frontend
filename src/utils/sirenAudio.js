@@ -161,41 +161,10 @@ export function stopEmergencySiren() {
 }
 
 /**
- * Attaches a one-time global user interaction listener to unlock and play audio
- * as soon as the user taps, clicks, or presses any key.
+ * attachGlobalAudioUnlock (disabled — siren sound on unlock removed)
  */
-export function attachGlobalAudioUnlock(onUnlocked) {
-  if (typeof window === 'undefined') return () => {};
-
-  let unlocked = false;
-  const events = ['pointerdown', 'touchstart', 'click', 'keydown'];
-
-  const unlockHandler = async (e) => {
-    if (unlocked) return;
-    unlocked = true;
-
-    events.forEach((evt) => {
-      window.removeEventListener(evt, unlockHandler, true);
-    });
-
-    if (typeof onUnlocked === 'function') {
-      try {
-        await onUnlocked(e);
-      } catch (err) {
-        console.debug('[Siren] Unlock callback error:', err);
-      }
-    }
-  };
-
-  events.forEach((evt) => {
-    window.addEventListener(evt, unlockHandler, { capture: true, once: true });
-  });
-
-  return () => {
-    events.forEach((evt) => {
-      window.removeEventListener(evt, unlockHandler, true);
-    });
-  };
+export function attachGlobalAudioUnlock() {
+  return () => {};
 }
 
 /**

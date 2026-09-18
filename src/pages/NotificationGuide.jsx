@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Smartphone, Apple, ArrowLeft, Check, AlertTriangle,
-  Share2, PlusSquare, Sparkles, ShieldCheck, Settings,
+  Share2, PlusSquare, ShieldCheck, Settings,
   ExternalLink, HelpCircle, Compass, Globe, MoreHorizontal
 } from 'lucide-react';
 import pwaInstallManager from '../services/pwaInstallManager.js';

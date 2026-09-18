@@ -44,10 +44,10 @@ export default function InstallButton({
       <button
         type="button"
         onClick={showInstallPrompt}
-        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-red-700 text-white text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer ${className}`}
+        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-red-700 text-white text-xs font-bold shadow-xs active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap shrink-0 ${className}`}
       >
-        <Download className="w-3.5 h-3.5" />
-        <span>{label}</span>
+        <Download className="w-3.5 h-3.5 shrink-0" />
+        <span className="whitespace-nowrap">{label}</span>
       </button>
     );
   }
@@ -57,10 +57,10 @@ export default function InstallButton({
     <button
       type="button"
       onClick={showInstallPrompt}
-      className={`inline-flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-red-50 hover:bg-red-100 border border-red-200 text-primary text-xs font-bold transition-all active:scale-[0.99] cursor-pointer ${className}`}
+      className={`inline-flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-red-50 hover:bg-red-100 border border-red-200 text-primary text-xs font-bold transition-all active:scale-[0.99] cursor-pointer whitespace-nowrap ${className}`}
     >
-      <Download className="w-4 h-4" />
-      <span>{label}</span>
+      <Download className="w-4 h-4 shrink-0" />
+      <span className="whitespace-nowrap">{label}</span>
     </button>
   );
 }

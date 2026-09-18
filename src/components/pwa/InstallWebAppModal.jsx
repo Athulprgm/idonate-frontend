@@ -10,6 +10,9 @@ import {
   Smartphone,
   ExternalLink,
   Info,
+  Compass,
+  Globe,
+  MoreHorizontal,
 } from 'lucide-react';
 import { usePWAInstall } from '../../hooks/usePWAInstall.js';
 
@@ -32,6 +35,12 @@ export default function InstallWebAppModal() {
   const initialCategory = platform === 'ios' ? 'ios' : 'android';
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [showAndroidManualSteps, setShowAndroidManualSteps] = useState(false);
+  const [iosBrowser, setIosBrowser] = useState(() => {
+    if (typeof navigator !== 'undefined' && /crios/i.test(navigator.userAgent)) {
+      return 'chrome';
+    }
+    return 'safari';
+  });
 
   // Sync category whenever platform updates
   useEffect(() => {
@@ -171,53 +180,146 @@ export default function InstallWebAppModal() {
             {activeCategory === 'ios' ? (
               /* ─── iOS Step-by-Step Instructions ─── */
               <div className="space-y-3.5">
-                <div className="p-3 bg-rose-50/70 dark:bg-rose-950/30 rounded-2xl border border-rose-100 dark:border-rose-900/40 text-xs text-slate-700 dark:text-zinc-300">
-                  Follow these 3 quick steps in <strong>Safari</strong> to install:
+                {/* Safari vs Chrome toggle */}
+                <div className="bg-slate-100 dark:bg-zinc-800/80 p-1 rounded-xl flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setIosBrowser('safari')}
+                    className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      iosBrowser === 'safari'
+                        ? 'bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                        : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800'
+                    }`}
+                  >
+                    <Compass className="w-3.5 h-3.5" />
+                    <span>Safari</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIosBrowser('chrome')}
+                    className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      iosBrowser === 'chrome'
+                        ? 'bg-white dark:bg-zinc-900 text-amber-600 dark:text-amber-400 shadow-xs'
+                        : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800'
+                    }`}
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>Chrome</span>
+                  </button>
                 </div>
 
-                <div className="space-y-2.5">
-                  <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-zinc-800/60 rounded-xl border border-slate-100 dark:border-zinc-800">
-                    <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center shrink-0 font-black text-xs">
-                      1
-                    </div>
-                    <div className="flex-1 text-xs">
-                      <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1">
-                        Tap the Share button <Share2 className="w-3.5 h-3.5 text-blue-500 inline" />
+                {iosBrowser === 'safari' ? (
+                  <>
+                    <div className="p-3 bg-blue-50/70 dark:bg-blue-950/30 rounded-2xl border border-blue-100 dark:border-blue-900/40 text-xs text-blue-900 dark:text-blue-200 flex items-center justify-between">
+                      <span>Follow these 3 steps in <strong>Safari</strong>:</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100/70 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300">
+                        Recommended
                       </span>
-                      <p className="text-slate-500 dark:text-zinc-400 mt-0.5">
-                        Located at the bottom of Safari on iPhone (or top bar on iPad).
-                      </p>
                     </div>
-                  </div>
 
-                  <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-zinc-800/60 rounded-xl border border-slate-100 dark:border-zinc-800">
-                    <div className="w-7 h-7 rounded-lg bg-red-50 dark:bg-red-950/50 text-primary flex items-center justify-center shrink-0 font-black text-xs">
-                      2
-                    </div>
-                    <div className="flex-1 text-xs">
-                      <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1">
-                        Select "Add to Home Screen" <PlusSquare className="w-3.5 h-3.5 text-primary inline" />
-                      </span>
-                      <p className="text-slate-500 dark:text-zinc-400 mt-0.5">
-                        Scroll down the share menu list until you see this option.
-                      </p>
-                    </div>
-                  </div>
+                    <div className="space-y-2.5">
+                      <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-zinc-800/60 rounded-xl border border-slate-100 dark:border-zinc-800">
+                        <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center shrink-0 font-black text-xs">
+                          1
+                        </div>
+                        <div className="flex-1 text-xs">
+                          <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                            Tap the Share button <Share2 className="w-3.5 h-3.5 text-blue-500 inline" />
+                          </span>
+                          <p className="text-slate-500 dark:text-zinc-400 mt-0.5">
+                            Located at the bottom of Safari on iPhone (or top bar on iPad).
+                          </p>
+                        </div>
+                      </div>
 
-                  <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-zinc-800/60 rounded-xl border border-slate-100 dark:border-zinc-800">
-                    <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center shrink-0 font-black text-xs">
-                      3
+                      <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-zinc-800/60 rounded-xl border border-slate-100 dark:border-zinc-800">
+                        <div className="w-7 h-7 rounded-lg bg-red-50 dark:bg-red-950/50 text-primary flex items-center justify-center shrink-0 font-black text-xs">
+                          2
+                        </div>
+                        <div className="flex-1 text-xs">
+                          <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                            Select &quot;Add to Home Screen&quot; <PlusSquare className="w-3.5 h-3.5 text-primary inline" />
+                          </span>
+                          <p className="text-slate-500 dark:text-zinc-400 mt-0.5">
+                            Scroll down the share sheet until you see this option.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-zinc-800/60 rounded-xl border border-slate-100 dark:border-zinc-800">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center shrink-0 font-black text-xs">
+                          3
+                        </div>
+                        <div className="flex-1 text-xs">
+                          <span className="font-bold text-slate-900 dark:text-white">
+                            Tap &quot;Add&quot; in top-right corner
+                          </span>
+                          <p className="text-slate-500 dark:text-zinc-400 mt-0.5">
+                            The iDonate icon will appear instantly on your home screen!
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex-1 text-xs">
-                      <span className="font-bold text-slate-900 dark:text-white">
-                        Tap "Add" in top-right corner
+                  </>
+                ) : (
+                  <>
+                    <div className="p-3 bg-amber-50/70 dark:bg-amber-950/30 rounded-2xl border border-amber-100 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-200 flex items-center justify-between">
+                      <span>Follow these 3 steps in <strong>Google Chrome</strong>:</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100/70 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300">
+                        iOS Chrome
                       </span>
-                      <p className="text-slate-500 dark:text-zinc-400 mt-0.5">
-                        The iDonate icon will appear instantly on your home screen!
-                      </p>
                     </div>
-                  </div>
-                </div>
+
+                    <div className="space-y-2.5">
+                      <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-zinc-800/60 rounded-xl border border-slate-100 dark:border-zinc-800">
+                        <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 flex items-center justify-center shrink-0 font-black text-xs">
+                          1
+                        </div>
+                        <div className="flex-1 text-xs">
+                          <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                            Tap Share <Share2 className="w-3.5 h-3.5 text-amber-600 inline" /> or 3 Dots <MoreHorizontal className="w-3.5 h-3.5 text-slate-700 inline" />
+                          </span>
+                          <p className="text-slate-500 dark:text-zinc-400 mt-0.5">
+                            Tap Share in address bar, or tap the 3 dots menu at the bottom right.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-zinc-800/60 rounded-xl border border-slate-100 dark:border-zinc-800">
+                        <div className="w-7 h-7 rounded-lg bg-red-50 dark:bg-red-950/50 text-primary flex items-center justify-center shrink-0 font-black text-xs">
+                          2
+                        </div>
+                        <div className="flex-1 text-xs">
+                          <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                            Select &quot;Add to Home Screen&quot; <PlusSquare className="w-3.5 h-3.5 text-primary inline" />
+                          </span>
+                          <p className="text-slate-500 dark:text-zinc-400 mt-0.5">
+                            Scroll down the menu options until you see &quot;Add to Home Screen&quot;.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-zinc-800/60 rounded-xl border border-slate-100 dark:border-zinc-800">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center shrink-0 font-black text-xs">
+                          3
+                        </div>
+                        <div className="flex-1 text-xs">
+                          <span className="font-bold text-slate-900 dark:text-white">
+                            Tap &quot;Add&quot; in top-right corner
+                          </span>
+                          <p className="text-slate-500 dark:text-zinc-400 mt-0.5">
+                            Tap Add to place iDonate directly on your iPhone home screen.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 bg-slate-50 dark:bg-zinc-800/60 rounded-xl border border-slate-200/60 dark:border-zinc-800 text-[11px] text-slate-500 dark:text-zinc-400">
+                      <strong>Tip:</strong> If &quot;Add to Home Screen&quot; is missing in Chrome, tap 3 dots &rarr; tap <strong>&quot;Open in Safari&quot;</strong> and add it from Safari.
+                    </div>
+                  </>
+                )}
 
                 {browser.isInApp && (
                   <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200/60 dark:border-amber-900/40 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2">

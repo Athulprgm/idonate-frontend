@@ -10,7 +10,10 @@ import {
   ShieldCheck,
   ChevronRight,
   ArrowUpRight,
-  Info
+  Info,
+  Compass,
+  Globe,
+  MoreHorizontal
 } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall.js';
 import { useAppStore } from '../store/appStore.js';
@@ -20,6 +23,12 @@ export default function DownloadApp() {
   const { triggerToast } = useAppStore();
 
   const [activeTab, setActiveTab] = useState(platform === 'ios' ? 'ios' : 'android');
+  const [iosBrowser, setIosBrowser] = useState(() => {
+    if (typeof navigator !== 'undefined' && /crios/i.test(navigator.userAgent)) {
+      return 'chrome';
+    }
+    return 'safari';
+  });
   const [notifyContact, setNotifyContact] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(() => {
     return localStorage.getItem('jeevalink_android_waitlist_registered') === 'true';
@@ -199,11 +208,79 @@ export default function DownloadApp() {
                 <li>Open the app from your home screen and allow notifications to receive emergency sirens.</li>
               </ol>
             ) : (
-              <ol className="space-y-2 text-xs text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100 list-decimal list-inside leading-relaxed">
-                <li>In Safari browser, tap the <strong className="inline-flex items-center gap-1 font-semibold text-slate-800"><Share2 className="w-3 h-3 text-blue-600" /> Share</strong> button at the bottom.</li>
-                <li>Scroll down and tap <strong className="inline-flex items-center gap-1 font-semibold text-slate-800"><PlusSquare className="w-3 h-3" /> Add to Home Screen</strong>.</li>
-                <li>Tap <strong>Add</strong> at top right, then launch from your home screen.</li>
-              </ol>
+              <div className="space-y-3">
+                {/* iPhone Browser Switcher: Safari vs Chrome */}
+                <div className="flex items-center justify-between px-0.5">
+                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                    Select Browser
+                  </span>
+                  <div className="inline-flex p-1 bg-slate-100/90 rounded-xl gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setIosBrowser('safari')}
+                      className={`px-3 py-1 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                        iosBrowser === 'safari'
+                          ? 'bg-white text-blue-600 shadow-xs font-semibold'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      <Compass className="w-3.5 h-3.5" />
+                      Safari
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIosBrowser('chrome')}
+                      className={`px-3 py-1 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                        iosBrowser === 'chrome'
+                          ? 'bg-white text-amber-600 shadow-xs font-semibold'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      <Globe className="w-3.5 h-3.5" />
+                      Chrome
+                    </button>
+                  </div>
+                </div>
+
+                {iosBrowser === 'safari' ? (
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2.5">
+                    <div className="flex items-center justify-between text-xs pb-1.5 border-b border-slate-200/50">
+                      <span className="font-semibold text-slate-800 flex items-center gap-1.5">
+                        <Compass className="w-3.5 h-3.5 text-blue-600" />
+                        Safari Guide
+                      </span>
+                      <span className="text-[10px] font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-100/80">
+                        Recommended
+                      </span>
+                    </div>
+                    <ol className="space-y-2 text-xs text-slate-600 list-decimal list-inside leading-relaxed">
+                      <li>In Safari browser, tap the <strong className="inline-flex items-center gap-1 font-semibold text-slate-800"><Share2 className="w-3 h-3 text-blue-600" /> Share</strong> button at the bottom.</li>
+                      <li>Scroll down and tap <strong className="inline-flex items-center gap-1 font-semibold text-slate-800"><PlusSquare className="w-3 h-3" /> Add to Home Screen</strong>.</li>
+                      <li>Tap <strong>Add</strong> at top right, then launch from your home screen.</li>
+                    </ol>
+                  </div>
+                ) : (
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2.5">
+                    <div className="flex items-center justify-between text-xs pb-1.5 border-b border-slate-200/50">
+                      <span className="font-semibold text-slate-800 flex items-center gap-1.5">
+                        <Globe className="w-3.5 h-3.5 text-amber-600" />
+                        Google Chrome on iPhone
+                      </span>
+                      <span className="text-[10px] font-medium bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-100/80">
+                        iOS Chrome
+                      </span>
+                    </div>
+                    <ol className="space-y-2 text-xs text-slate-600 list-decimal list-inside leading-relaxed">
+                      <li>In Chrome on iPhone, tap the <strong className="inline-flex items-center gap-1 font-semibold text-slate-800"><Share2 className="w-3 h-3 text-amber-600" /> Share</strong> icon next to the address bar (or tap the <strong className="inline-flex items-center gap-1 font-semibold text-slate-800"><MoreHorizontal className="w-3 h-3 text-slate-700" /> 3 dots</strong> menu).</li>
+                      <li>Scroll down the options and tap <strong className="inline-flex items-center gap-1 font-semibold text-slate-800"><PlusSquare className="w-3 h-3" /> Add to Home Screen</strong>.</li>
+                      <li>Tap <strong>Add</strong> at top right to place the app on your home screen.</li>
+                    </ol>
+                    <div className="pt-2 border-t border-slate-200/50 text-[11px] text-slate-500 leading-normal">
+                      <span className="font-medium text-slate-700">Tip:</span> If you don&apos;t see &quot;Add to Home Screen&quot; in Chrome, tap the 3 dots menu &rarr; tap <strong>&quot;Open in Safari&quot;</strong> to install directly.
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 

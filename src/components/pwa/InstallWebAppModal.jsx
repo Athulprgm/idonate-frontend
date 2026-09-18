@@ -145,7 +145,6 @@ export default function InstallWebAppModal() {
                     : 'text-slate-500 dark:text-zinc-400 hover:text-slate-700'
                 }`}
               >
-                <Smartphone className="w-3.5 h-3.5 shrink-0" />
                 <span>Android</span>
                 {platform === 'android' && (
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Detected device" />
@@ -161,7 +160,6 @@ export default function InstallWebAppModal() {
                     : 'text-slate-500 dark:text-zinc-400 hover:text-slate-700'
                 }`}
               >
-                <Apple className="w-3.5 h-3.5 shrink-0" />
                 <span>iPhone / iPad</span>
                 {platform === 'ios' && (
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Detected device" />
@@ -175,9 +173,8 @@ export default function InstallWebAppModal() {
             {activeCategory === 'ios' ? (
               /* ─── iOS Step-by-Step Instructions ─── */
               <div className="space-y-3.5">
-                <div className="p-3 bg-rose-50/70 dark:bg-rose-950/30 rounded-2xl border border-rose-100 dark:border-rose-900/40 text-xs text-slate-700 dark:text-zinc-300 flex items-center gap-2">
-                  <Compass className="w-4 h-4 text-primary shrink-0" />
-                  <span>Follow these 3 quick steps in <strong>Safari</strong> to install:</span>
+                <div className="p-3 bg-rose-50/70 dark:bg-rose-950/30 rounded-2xl border border-rose-100 dark:border-rose-900/40 text-xs text-slate-700 dark:text-zinc-300">
+                  Follow these 3 quick steps in <strong>Safari</strong> to install:
                 </div>
 
                 <div className="space-y-2.5">

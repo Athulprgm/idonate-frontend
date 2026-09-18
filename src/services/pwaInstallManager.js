@@ -406,3 +406,4 @@ class PWAInstallManager {
 
 // Export singleton instance
 export const pwaManager = new PWAInstallManager();
+export default pwaManager;

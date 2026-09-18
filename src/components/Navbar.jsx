@@ -14,6 +14,7 @@ const publicLinks = [
   { label: 'Find Donors', to: '/donor/search' },
   { label: 'Requests', to: '/requests' },
   { label: 'Directory', to: '/volunteer-directory' },
+  { label: 'Notification Guide', to: '/notification-guide' },
 ];
 
 export default function Navbar() {

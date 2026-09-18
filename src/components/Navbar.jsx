@@ -267,6 +267,9 @@ export default function Navbar() {
                       <Link to="/settings" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900">
                         <Settings className="w-4 h-4 text-slate-400" /> Settings
                       </Link>
+                      <Link to="/notification-guide" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900">
+                        <Bell className="w-4 h-4 text-slate-400" /> Notification Guide
+                      </Link>
                       <div className="my-1 h-px bg-slate-100 mx-2" />
                       <button type="button" onClick={handleLogout} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 cursor-pointer">
                         <LogOut className="w-4 h-4" /> Sign Out
@@ -300,7 +303,7 @@ export default function Navbar() {
           {/* Mobile Menu Toggle */}
           <button
             type="button"
-            className="md:hidden p-2 text-slate-600 hover:text-red-600 transition-colors cursor-pointer shrink-0"
+            className="lg:hidden p-2 text-slate-600 hover:text-red-600 transition-colors cursor-pointer shrink-0"
             onClick={() => setMobileMenuOpen(true)}
             aria-label="Open menu"
           >
@@ -323,14 +326,14 @@ export default function Navbar() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileMenuOpen(false)}
-              className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[60] md:hidden"
+              className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[60] lg:hidden"
             />
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 h-[100dvh] w-[280px] max-w-[85vw] bg-white z-[70] shadow-2xl flex flex-col md:hidden border-l border-slate-100"
+              className="fixed top-0 right-0 bottom-0 h-[100dvh] w-[280px] max-w-[85vw] bg-white z-[70] shadow-2xl flex flex-col lg:hidden border-l border-slate-100"
             >
               <div className="p-4 flex items-center justify-between border-b border-slate-100 shrink-0">
                 <Link to="/" className="flex items-center gap-2 select-none">

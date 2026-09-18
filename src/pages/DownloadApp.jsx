@@ -205,7 +205,7 @@ export default function DownloadApp() {
               <ol className="space-y-2 text-xs text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100 list-decimal list-inside leading-relaxed">
                 <li>Tap the <strong>&quot;Install Web App&quot;</strong> button above, or tap the three dots (⋮) in Chrome.</li>
                 <li>Select <strong>&quot;Install app&quot;</strong> or <strong>&quot;Add to Home screen&quot;</strong>.</li>
-                <li>Open the app from your home screen and allow notifications to receive emergency sirens.</li>
+                <li>Open the app from your home screen and allow notifications to receive emergency notifications.</li>
               </ol>
             ) : (
               <div className="space-y-3">
@@ -308,7 +308,7 @@ export default function DownloadApp() {
           </div>
 
           <p className="text-xs text-slate-600 leading-relaxed">
-            The native Android app is currently in QA testing with hardware volume-level siren overrides, turn-by-turn hospital route maps, and offline block committee phonebooks.
+            The native Android app is currently in QA testing with hardware volume-level notification sound overrides, turn-by-turn hospital route maps, and offline block committee phonebooks.
           </p>
 
           {/* Minimalist Notify Form */}

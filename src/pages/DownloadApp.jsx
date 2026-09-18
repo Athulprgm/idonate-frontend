@@ -5,7 +5,7 @@ import {
   Share2,
   PlusSquare,
   CheckCircle2,
-  Volume2,
+  BellRing,
   Zap,
   ShieldCheck,
   ChevronRight,
@@ -146,9 +146,9 @@ export default function DownloadApp() {
           <div className="grid grid-cols-3 gap-3 pt-1">
             <div className="text-center p-3 rounded-2xl bg-slate-50/70 border border-slate-100/80">
               <div className="w-7 h-7 mx-auto rounded-full bg-red-50 text-red-600 flex items-center justify-center mb-1.5">
-                <Volume2 className="w-3.5 h-3.5" />
+                <BellRing className="w-3.5 h-3.5" />
               </div>
-              <div className="text-xs font-semibold text-slate-900">Siren Alerts</div>
+              <div className="text-xs font-semibold text-slate-900">Notification</div>
               <div className="text-[11px] text-slate-400 mt-0.5">Instant push</div>
             </div>
 

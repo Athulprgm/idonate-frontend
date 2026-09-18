@@ -232,7 +232,6 @@ export default function App() {
         ) : (
           <>
             <Toast />
-            <BetaWarningPopup />
             <InstallWebAppModal />
             <Suspense fallback={<PageLoader />}>
             <Routes>

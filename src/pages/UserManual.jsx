@@ -11,42 +11,25 @@ import {
   ChevronRight,
   Droplet,
   Check,
-  Copy,
   Printer,
-  Zap,
   BadgeCheck,
   Volume2,
-  Radio,
-  Sliders,
-  Play
+  Radio
 } from 'lucide-react';
 import { useAppStore } from '../store/appStore.js';
 import { playEmergencyAlertBurst, playNotificationChime } from '../utils/sirenAudio.js';
 
-// Blood Compatibility Reference
-const BLOOD_COMPATIBILITY = {
-  'O-': { canGive: ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'], canReceive: ['O-'], labelEn: 'Universal Red Cell Donor', labelMl: 'സാർവ്വത്രിക ദാതാവ്' },
-  'O+': { canGive: ['O+', 'A+', 'B+', 'AB+'], canReceive: ['O+', 'O-'], labelEn: 'Most Needed in Emergencies', labelMl: 'അടിയന്തര ഘട്ടങ്ങളിൽ അത്യാവശ്യം' },
-  'A-': { canGive: ['A-', 'A+', 'AB-', 'AB+'], canReceive: ['A-', 'O-'], labelEn: 'Rare Negative Group', labelMl: 'അപൂർവ്വ നെഗറ്റീവ് ഗ്രൂപ്പ്' },
-  'A+': { canGive: ['A+', 'AB+'], canReceive: ['A+', 'A-', 'O+', 'O-'], labelEn: 'Common Compatible Group', labelMl: 'സാധാരണ രക്തഗ്രൂപ്പ്' },
-  'B-': { canGive: ['B-', 'B+', 'AB-', 'AB+'], canReceive: ['B-', 'O-'], labelEn: 'Rare Negative Group', labelMl: 'അപൂർവ്വ നെഗറ്റീവ് ഗ്രൂപ്പ്' },
-  'B+': { canGive: ['B+', 'AB+'], canReceive: ['B+', 'B-', 'O+', 'O-'], labelEn: 'High Demand in Kerala', labelMl: 'കേരളത്തിൽ ഉയർന്ന ആവശ്യം' },
-  'AB-': { canGive: ['AB-', 'AB+'], canReceive: ['AB-', 'A-', 'B-', 'O-'], labelEn: 'Very Rare Group', labelMl: 'അതി അപൂർവ്വ ഗ്രൂപ്പ്' },
-  'AB+': { canGive: ['AB+'], canReceive: ['All Groups / Universal Recipient'], labelEn: 'Universal Recipient', labelMl: 'സാർവ്വത്രിക സ്വീകർത്താവ്' },
-};
-
 export default function UserManual() {
   const { triggerToast } = useAppStore();
 
-  // Navigation & View Filters
-  const [role, setRole] = useState('donor'); // 'donor' | 'meghala' | 'public' | 'simulator'
+  // Navigation & View Filters (Primarily Donors & Meghala Committee)
+  const [role, setRole] = useState('donor'); // 'donor' | 'meghala'
   const [lang, setLang] = useState('both'); // 'en' | 'ml' | 'both'
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedText, setCopiedText] = useState(false);
 
   // Interactive Live Demos
   const [simAvailable, setSimAvailable] = useState(true);
-  const [simBlood, setSimBlood] = useState('O+');
   const [isPlayingAlert, setIsPlayingAlert] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
 
@@ -182,7 +165,7 @@ export default function UserManual() {
 
         <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
           {lang !== 'ml' && (
-            <span>Step-by-step visual tutorial for Donors, Meghala Committees, and Emergency Coordinators.</span>
+            <span>Step-by-step visual tutorial for Donors and Meghala Committee Volunteers.</span>
           )}
           {lang === 'both' && <span className="block my-0.5 text-slate-300"></span>}
           {lang !== 'en' && (
@@ -198,7 +181,7 @@ export default function UserManual() {
             <Search className="w-4 h-4 absolute left-3.5 text-slate-400 pointer-events-none" />
             <input
               type="text"
-              placeholder={lang === 'ml' ? 'സഹായ വിഷയങ്ങൾ തിരയുക... (ലഭ്യത, പോസ്റ്റർ, SOS)' : 'Search topics... (availability, poster, emergency)'}
+              placeholder={lang === 'ml' ? 'സഹായ വിഷയങ്ങൾ തിരയുക... (ലഭ്യത, പോസ്റ്റർ, പരിശോധന)' : 'Search topics... (availability, poster, verification)'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-9 py-2.5 bg-white border border-slate-200/90 rounded-2xl text-xs shadow-xs focus:outline-none focus:ring-2 focus:ring-slate-300 transition-all placeholder:text-slate-400"
@@ -215,56 +198,38 @@ export default function UserManual() {
         </div>
       </section>
 
-      {/* ── MINIMAL SEGMENTED CONTROL ── */}
+      {/* ── TWO CORE ROLES SEGMENTED CONTROL (DONORS & MEGHALA COMMITTEE) ── */}
       <section className="max-w-3xl mx-auto px-5 mb-8">
         <div className="bg-slate-100 p-1 rounded-2xl flex gap-1 border border-slate-200/60">
           
           <button
             onClick={() => setRole('donor')}
-            className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               role === 'donor'
                 ? 'bg-white text-slate-900 shadow-xs'
                 : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Droplet className="w-3.5 h-3.5 text-red-600 fill-current" />
-            <span>Donors (ദാതാക്കൾ)</span>
+            <Droplet className="w-4 h-4 text-red-600 fill-current" />
+            <div className="text-left">
+              <span className="block text-xs font-bold leading-none">For Donors</span>
+              <span className="text-[10px] font-medium text-slate-400 leading-none mt-0.5">രക്തദാതാക്കൾക്ക്</span>
+            </div>
           </button>
 
           <button
             onClick={() => setRole('meghala')}
-            className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               role === 'meghala'
                 ? 'bg-white text-slate-900 shadow-xs'
                 : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-            <span>Meghala (മേഖല)</span>
-          </button>
-
-          <button
-            onClick={() => setRole('public')}
-            className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              role === 'public'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <Zap className="w-3.5 h-3.5 text-amber-600" />
-            <span>SOS (അടിയന്തരം)</span>
-          </button>
-
-          <button
-            onClick={() => setRole('simulator')}
-            className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              role === 'simulator'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <Sliders className="w-3.5 h-3.5 text-purple-600" />
-            <span>Demo (ടെസ്റ്റ്)</span>
+            <ShieldCheck className="w-4 h-4 text-blue-600" />
+            <div className="text-left">
+              <span className="block text-xs font-bold leading-none">Meghala Committee</span>
+              <span className="text-[10px] font-medium text-slate-400 leading-none mt-0.5">മേഖലാ സമിതി (വോളണ്ടിയർമാർ)</span>
+            </div>
           </button>
 
         </div>
@@ -630,186 +595,6 @@ export default function UserManual() {
                 </div>
               </div>
             )}
-
-          </div>
-        )}
-
-        {/* ============================================================ */}
-        {/* TAB 3: EMERGENCY BLOOD SEEKERS & PUBLIC                      */}
-        {/* ============================================================ */}
-        {role === 'public' && (
-          <div className="space-y-6">
-
-            <div className="bg-white rounded-3xl border border-slate-200/70 p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
-              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Emergency Guide</span>
-              <h2 className="text-base font-bold text-slate-900 mt-0.5">രോഗികൾക്കും പൊതുജനങ്ങൾക്കുമുള്ള വഴികാട്ടി</h2>
-              <p className="text-xs text-slate-500 mt-0.5">അടിയന്തര ഘട്ടങ്ങളിൽ വേഗത്തിൽ രക്തം ലഭ്യമാക്കാൻ</p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="bg-white rounded-3xl border border-slate-200/70 p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-2">
-                <span className="w-6 h-6 rounded-lg bg-red-50 text-red-600 flex items-center justify-center font-bold text-xs">1</span>
-                <div className="text-xs font-bold text-slate-800">Submit Request</div>
-                <div className="text-[11px] text-slate-500 leading-relaxed">
-                  Enter patient name, required units, hospital, and bystander number at <Link to="/emergency-request" className="text-red-600 font-bold underline">Emergency Form</Link>.
-                </div>
-              </div>
-
-              <div className="bg-white rounded-3xl border border-slate-200/70 p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-2">
-                <span className="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">2</span>
-                <div className="text-xs font-bold text-slate-800">Committee Call</div>
-                <div className="text-[11px] text-slate-500 leading-relaxed">
-                  The local Meghala coordinator calls your phone within minutes to verify and activate the donor network.
-                </div>
-              </div>
-
-              <div className="bg-white rounded-3xl border border-slate-200/70 p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-2">
-                <span className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs">3</span>
-                <div className="text-xs font-bold text-slate-800">Donor Arrival</div>
-                <div className="text-[11px] text-slate-500 leading-relaxed">
-                  Matched donors arrive directly at the hospital blood bank to complete the donation.
-                </div>
-              </div>
-            </div>
-
-            {/* Volunteer Directory Hotline */}
-            <div className="bg-white rounded-3xl border border-slate-200/70 p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex items-center justify-between gap-4">
-              <div>
-                <div className="text-xs font-bold text-slate-900">Direct Coordinator Phone Numbers</div>
-                <div className="text-[11px] text-slate-500 mt-0.5">കേരളത്തിലെ മുഴുവൻ മേഖല സമിതി കോർഡിനേറ്റർമാരുടെയും നമ്പറുകൾ</div>
-              </div>
-              <Link
-                to="/volunteer-directory"
-                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shrink-0"
-              >
-                <Phone className="w-3.5 h-3.5" />
-                <span>Open Directory</span>
-              </Link>
-            </div>
-
-          </div>
-        )}
-
-        {/* ============================================================ */}
-        {/* TAB 4: LIVE PRACTICE DEMO & TOOLS                            */}
-        {/* ============================================================ */}
-        {role === 'simulator' && (
-          <div className="space-y-6">
-
-            <div className="bg-white rounded-3xl border border-slate-200/70 p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
-              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Interactive Test Lab</span>
-              <h2 className="text-base font-bold text-slate-900 mt-0.5">തത്സമയ പരിശീലന കേന്ദ്രം</h2>
-              <p className="text-xs text-slate-500 mt-0.5">രക്തഗ്രൂപ്പ് പൊരുത്തവും അറിയിപ്പ് ശബ്ദങ്ങളും നേരിട്ട് പരീക്ഷിച്ചു മനസ്സിലാക്കാം</p>
-            </div>
-
-            {/* Blood Compatibility Lookup */}
-            <div className="bg-white rounded-3xl border border-slate-200/70 p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-4">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div>
-                  <div className="text-xs font-bold text-slate-900">Blood Compatibility Matrix</div>
-                  <div className="text-[11px] text-slate-500">ഏതൊക്കെ ഗ്രൂപ്പുകൾ പരസ്പരം സ്വീകരിക്കാം എന്ന് നോക്കാം</div>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {Object.keys(BLOOD_COMPATIBILITY).map((b) => (
-                    <button
-                      key={b}
-                      onClick={() => setSimBlood(b)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-                        simBlood === b ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      {b}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-1 bg-red-600 text-white text-xs font-bold rounded-lg">{simBlood}</span>
-                  <span className="text-xs font-bold text-slate-800">{BLOOD_COMPATIBILITY[simBlood].labelEn}</span>
-                  <span className="text-xs text-slate-400">•</span>
-                  <span className="text-xs text-slate-600">{BLOOD_COMPATIBILITY[simBlood].labelMl}</span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs">
-                  <div className="p-3 bg-white rounded-xl border border-slate-100 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Can Give To (നൽകാവുന്നത്)</span>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {BLOOD_COMPATIBILITY[simBlood].canGive.map((g) => (
-                        <span key={g} className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded font-semibold text-[11px]">
-                          {g}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="p-3 bg-white rounded-xl border border-slate-100 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Can Receive From (സ്വീകരിക്കാവുന്നത്)</span>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {BLOOD_COMPATIBILITY[simBlood].canReceive.map((g) => (
-                        <span key={g} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded font-semibold text-[11px]">
-                          {g}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Siren & Chime Sound Tester */}
-            <div className="bg-white rounded-3xl border border-slate-200/70 p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-3">
-              <div className="text-xs font-bold text-slate-900">Audio Sound Alert Tester</div>
-              <div className="text-[11px] text-slate-500">ഫോണിൽ ശബ്ദം കേൾക്കുന്നുണ്ടോ എന്ന് ഇവിടെ പരിശോധിക്കാം</div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                <button
-                  onClick={() => handleTestSound('burst')}
-                  disabled={isPlayingAlert}
-                  className="p-3 bg-red-50 hover:bg-red-100 text-red-700 rounded-2xl border border-red-200/60 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors"
-                >
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>{isPlayingAlert ? 'Playing Siren...' : 'Emergency Siren (3.5s)'}</span>
-                </button>
-
-                <button
-                  onClick={() => handleTestSound('chime')}
-                  className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors"
-                >
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>Gentle Chime</span>
-                </button>
-              </div>
-            </div>
-
-            {/* 1-Click WhatsApp Text Generator */}
-            <div className="bg-white rounded-3xl border border-slate-200/70 p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-bold text-slate-900">Sample WhatsApp Alert Message</div>
-                  <div className="text-[11px] text-slate-500">ഗ്രൂപ്പുകളിൽ പങ്കുവെക്കാൻ തയ്യാറാക്കിയ മാതൃക</div>
-                </div>
-                <button
-                  onClick={() => {
-                    const text = `🚨 *JEEVALINK EMERGENCY BLOOD ALERT* 🚨\n\n🩸 *Blood Group:* ${simBlood} Required\n🏥 *Hospital:* Medical College Hospital\n👤 *Patient:* Urgent Surgery\n📍 *Meghala:* Verified by Local Committee\n\n📲 *Please contact immediately on JeevaLink or call coordinator.*`;
-                    navigator.clipboard.writeText(text);
-                    triggerToast('Sample text copied!', 'success');
-                  }}
-                  className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer"
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                  <span>Copy</span>
-                </button>
-              </div>
-
-              <div className="p-3 bg-slate-50 border border-slate-200/70 rounded-2xl font-mono text-[11px] text-slate-700 leading-relaxed space-y-1">
-                <div>🚨 *JEEVALINK EMERGENCY BLOOD ALERT* 🚨</div>
-                <div>🩸 *Blood Group:* {simBlood} Required</div>
-                <div>🏥 *Hospital:* Medical College Hospital</div>
-                <div>📍 *Meghala:* Verified by Local Committee</div>
-              </div>
-            </div>
 
           </div>
         )}

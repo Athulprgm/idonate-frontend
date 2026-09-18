@@ -10,8 +10,6 @@ import {
   Smartphone,
   ExternalLink,
   Info,
-  Apple,
-  Compass,
 } from 'lucide-react';
 import { usePWAInstall } from '../../hooks/usePWAInstall.js';
 

@@ -80,6 +80,7 @@ const TechnicalReports = safeLazy(() => import('./pages/TechnicalReports.jsx'));
 const Campaigns = safeLazy(() => import('./pages/Campaigns.jsx'));
 const UserSupport = safeLazy(() => import('./pages/UserSupport.jsx'));
 const SendFeedback = safeLazy(() => import('./pages/SendFeedback.jsx'));
+const NotificationGuide = safeLazy(() => import('./pages/NotificationGuide.jsx'));
 
 function PageLoader() {
   return (
@@ -248,6 +249,8 @@ export default function App() {
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/volunteer-directory" element={<VolunteerDirectory />} />
+                <Route path="/notification-guide" element={<NotificationGuide />} />
+                <Route path="/notifications-guide" element={<Navigate to="/notification-guide" replace />} />
               </Route>
 
               {/* Auth pages — no Navbar/Footer */}
@@ -418,6 +421,7 @@ export default function App() {
                 <Route path="/campaigns" element={<Campaigns />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/notifications" element={<Notifications />} />
+                <Route path="/notifications/guide" element={<NotificationGuide />} />
                 <Route path="/settings" element={<Settings />} />
               </Route>
 

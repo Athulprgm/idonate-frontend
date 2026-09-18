@@ -1,86 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
-  BellRing, Smartphone, Apple, Volume2, VolumeX,
-  ArrowLeft, Check, AlertTriangle, Share2, PlusSquare,
-  Sparkles, ShieldCheck, Settings, ExternalLink, HelpCircle
+  Smartphone, Apple, ArrowLeft, Check, AlertTriangle,
+  Share2, PlusSquare, Sparkles, ShieldCheck, Settings,
+  ExternalLink, HelpCircle
 } from 'lucide-react';
 import pwaInstallManager from '../services/pwaInstallManager.js';
-import { isPushSupported, getPermissionStatus, initPushNotifications } from '../services/webPushService.js';
-import { requestNotificationPermission } from '../services/firebaseMessaging.js';
-import { startEmergencySiren, stopEmergencySiren } from '../utils/sirenAudio.js';
-import { useAppStore } from '../store/appStore.js';
-import api from '../store/api.js';
 
 export default function NotificationGuide() {
   const navigate = useNavigate();
-  const { triggerToast } = useAppStore();
-
   const [activeTab, setActiveTab] = useState('android');
-  const [permStatus, setPermStatus] = useState(() => getPermissionStatus());
-  const [devicePlatform, setDevicePlatform] = useState('android');
-  const [isStandalone, setIsStandalone] = useState(false);
-
-  const [isPlayingSiren, setIsPlayingSiren] = useState(false);
-  const [testPushLoading, setTestPushLoading] = useState(false);
 
   useEffect(() => {
     const plat = pwaInstallManager.platform || 'android';
-    const installed = pwaInstallManager.isAppInstalled();
-    setDevicePlatform(plat);
-    setIsStandalone(installed);
-    setPermStatus(getPermissionStatus());
-
-    if (plat === 'ios') setActiveTab('ios');
-    else setActiveTab('android');
-  }, []);
-
-  const toggleSirenTest = async () => {
-    if (isPlayingSiren) {
-      stopEmergencySiren();
-      setIsPlayingSiren(false);
-      triggerToast('സൈറൺ നിർത്തി / Siren stopped', 'info');
+    if (plat === 'ios') {
+      setActiveTab('ios');
     } else {
-      try {
-        setIsPlayingSiren(true);
-        triggerToast('🚨 സൈറൺ ടെസ്റ്റ് ചെയ്യുന്നു... / Testing Siren...', 'info');
-        const ctrl = await startEmergencySiren(0.8);
-        if (ctrl.blocked) {
-          triggerToast('സ്ക്രീനിൽ ഒന്ന് തൊടുക / Tap screen to allow audio', 'warning');
-        }
-      } catch {
-        setIsPlayingSiren(false);
-      }
+      setActiveTab('android');
     }
-  };
-
-  const handleTestPush = async () => {
-    if (testPushLoading) return;
-    setTestPushLoading(true);
-    try {
-      if (permStatus !== 'granted') {
-        const ok = await requestNotificationPermission();
-        setPermStatus(getPermissionStatus());
-        if (!ok) {
-          setTestPushLoading(false);
-          triggerToast('ആദ്യം നോട്ടിഫിക്കേഷൻ Allow നൽകുക / Please allow notifications', 'warning');
-          return;
-        }
-      }
-
-      await initPushNotifications();
-      const res = await api.post('/notifications/test-web-push', { priority: 'immediate' });
-      if (res.data?.success) {
-        triggerToast('🚨 ടെസ്റ്റ് നോട്ടിഫിക്കേഷൻ അയച്ചു! / Test alert sent!', 'success');
-      } else {
-        triggerToast(res.data?.message || 'നോട്ടിഫിക്കേഷൻ അയക്കാൻ കഴിഞ്ഞില്ല', 'error');
-      }
-    } catch {
-      triggerToast('നോട്ടിഫിക്കേഷൻ അയക്കാൻ കഴിഞ്ഞില്ല / Failed to send alert', 'error');
-    } finally {
-      setTestPushLoading(false);
-    }
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 pb-24 font-sans">
@@ -116,46 +54,6 @@ export default function NotificationGuide() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 pt-5 space-y-4">
-
-        {/* ── Live Test Box (Simple 1-Tap Buttons) ── */}
-        <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/80 dark:border-zinc-800 p-4 shadow-xs space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs font-bold text-slate-900 dark:text-white">
-                നിങ്ങളുടെ ഫോൺ പരിശോധിക്കുക <span className="text-[11px] text-slate-400 font-normal">/ Test Your Phone</span>
-              </span>
-            </div>
-            <span className="text-[11px] px-2 py-0.5 rounded-full font-bold bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 capitalize">
-              {devicePlatform === 'ios' ? 'Apple iPhone' : 'Android Phone'}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2.5">
-            {/* Test Push */}
-            <button
-              onClick={handleTestPush}
-              disabled={testPushLoading}
-              className="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-black dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-2xs"
-            >
-              <BellRing className={`w-3.5 h-3.5 ${testPushLoading ? 'animate-spin' : ''}`} />
-              <span>{testPushLoading ? 'അയക്കുന്നു...' : 'ടെസ്റ്റ് മെസ്സേജ് അയക്കുക'}</span>
-            </button>
-
-            {/* Test Siren Audio */}
-            <button
-              onClick={toggleSirenTest}
-              className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs ${
-                isPlayingSiren
-                  ? 'bg-red-600 border-red-600 text-white animate-pulse'
-                  : 'bg-white dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-800 dark:text-zinc-200 hover:bg-slate-50'
-              }`}
-            >
-              {isPlayingSiren ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5 text-red-500" />}
-              <span>{isPlayingSiren ? 'ശബ്ദം നിർത്തുക (Stop)' : 'സൈറൺ ശബ്ദം (Sound)'}</span>
-            </button>
-          </div>
-        </div>
 
         {/* ── Simple Tabs: Android vs iPhone ── */}
         <div className="flex p-1 bg-slate-200/80 dark:bg-zinc-800 rounded-2xl">

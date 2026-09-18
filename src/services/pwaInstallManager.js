@@ -49,6 +49,11 @@ class PWAInstallManager {
     }
   }
 
+  get isMobile() {
+    if (typeof window === 'undefined' || !navigator) return false;
+    return this.platform === 'ios' || this.platform === 'android' || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+  }
+
   // ─── Platform Detection ─────────────────────────────────────────────────────
 
   detectPlatform() {

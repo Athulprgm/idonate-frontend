@@ -81,6 +81,7 @@ const UserSupport = safeLazy(() => import('./pages/UserSupport.jsx'));
 const SendFeedback = safeLazy(() => import('./pages/SendFeedback.jsx'));
 const NotificationGuide = safeLazy(() => import('./pages/NotificationGuide.jsx'));
 const DownloadApp = safeLazy(() => import('./pages/DownloadApp.jsx'));
+const UserManual = safeLazy(() => import('./pages/UserManual.jsx'));
 
 function PageLoader() {
   return (
@@ -253,6 +254,12 @@ export default function App() {
                 <Route path="/download-app" element={<DownloadApp />} />
                 <Route path="/download" element={<Navigate to="/download-app" replace />} />
                 <Route path="/app" element={<Navigate to="/download-app" replace />} />
+                <Route path="/user-manual" element={<UserManual />} />
+                <Route path="/manual" element={<Navigate to="/user-manual" replace />} />
+                <Route path="/guide" element={<Navigate to="/user-manual" replace />} />
+                <Route path="/tutorial" element={<Navigate to="/user-manual" replace />} />
+                <Route path="/how-to-use" element={<Navigate to="/user-manual" replace />} />
+                <Route path="/how-it-works" element={<Navigate to="/user-manual" replace />} />
               </Route>
 
               {/* Auth pages — no Navbar/Footer */}

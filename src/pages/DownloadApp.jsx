@@ -5,7 +5,6 @@ import {
   Share2,
   PlusSquare,
   CheckCircle2,
-  Sparkles,
   Volume2,
   Zap,
   ShieldCheck,
@@ -215,8 +214,7 @@ export default function DownloadApp() {
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-medium mb-1.5">
-                <Sparkles className="w-3 h-3 text-amber-500" />
+              <div className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-medium mb-1.5">
                 <span>Under Active Development</span>
               </div>
               <h3 className="text-xl font-semibold text-slate-900 tracking-tight">

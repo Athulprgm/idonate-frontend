@@ -6,7 +6,6 @@ import { LogOut, User, Users, Bell, ChevronDown, Settings, Siren, Award, CheckCi
 import { motion, AnimatePresence } from 'framer-motion';
 import { getStorageUrl } from '../store/api.js';
 import CommunityChoiceModal from './CommunityChoiceModal.jsx';
-import InstallButton from './pwa/InstallButton.jsx';
 
 
 const publicLinks = [
@@ -281,9 +280,6 @@ export default function Navbar() {
                 <span>Enter Community</span>
               </button>
 
-              <div className="hidden lg:flex items-center shrink-0">
-                <InstallButton variant="pill" />
-              </div>
 
               <Link
                 to="/login"
@@ -365,9 +361,6 @@ export default function Navbar() {
                   </Link>
                 ))}
 
-                <div className="mt-2 pt-2 border-t border-slate-100">
-                  <InstallButton className="w-full justify-center py-2.5" />
-                </div>
 
                 {!user && (
                   <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col gap-2">

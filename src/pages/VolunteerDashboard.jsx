@@ -582,10 +582,6 @@ export default function VolunteerDashboard() {
           );
         })}
       </div>
-            </div>
-          );
-        })}
-      </div>
 
       {/* ─── Pending Approval Highlight Queue ─── */}
       {pendingList.length > 0 && (
@@ -689,24 +685,24 @@ export default function VolunteerDashboard() {
       )}
 
       {/* ─── Main Grid Layout (Mobile Stacked) ─── */}
-      <div className="grid lg:grid-cols-3 gap-5 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 min-w-0 w-full">
 
         {/* ── Left Column (2 Cols): Blood Requests Queue ── */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-xs space-y-3.5 sm:space-y-4">
+        <div className="lg:col-span-2 space-y-4 min-w-0 w-full">
+          <div className="bg-white rounded-2xl p-3.5 sm:p-6 border border-slate-200 shadow-xs space-y-3.5 sm:space-y-4 min-w-0 w-full">
 
             {/* Queue Header & Search */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-              <div>
-                <h3 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-1.5">
-                  <Layers className="w-4 h-4 text-red-600" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 min-w-0">
+              <div className="min-w-0">
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-1.5 truncate">
+                  <Layers className="w-4 h-4 text-red-600 shrink-0" />
                   Blood Requests Queue
                 </h3>
-                <p className="text-[11px] sm:text-xs text-slate-500">Manage and coordinate blood donation cases in your area.</p>
+                <p className="text-[11px] sm:text-xs text-slate-500 truncate">Manage and coordinate blood donation cases in your area.</p>
               </div>
 
-              <div className="relative w-full sm:w-60">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <div className="relative w-full sm:w-60 min-w-0 shrink-0">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 shrink-0" />
                 <input
                   type="text"
                   placeholder="Search patient, hospital..."
@@ -725,24 +721,25 @@ export default function VolunteerDashboard() {
               </div>
             </div>
 
-            {/* Primary Tab Navigation (Mobile Scrollable) */}
-            <div className="flex bg-slate-100 p-1 rounded-xl gap-1 overflow-x-auto no-scrollbar">
+            {/* Primary Tab Navigation (Mobile Friendly) */}
+            <div className="flex bg-slate-100 p-1 rounded-xl gap-1 overflow-x-auto no-scrollbar w-full min-w-0 max-w-full">
               {[
-                ['pending', 'Pending Approval', pendingList.length],
-                ['verified', 'Verified Active', verified.length],
-                ['fulfilled', 'Fulfilled', fulfilled.length],
-                ['all', 'All Records', rawTabRequests.length],
-              ].map(([val, label, count]) => (
+                ['pending', 'Pending Approval', 'Pending', pendingList.length],
+                ['verified', 'Verified Active', 'Active', verified.length],
+                ['fulfilled', 'Fulfilled', 'Fulfilled', fulfilled.length],
+                ['all', 'All Records', 'All', rawTabRequests.length],
+              ].map(([val, label, shortLabel, count]) => (
                 <button
                   key={val}
                   onClick={() => setTab(val)}
-                  className={`flex-1 min-w-[105px] py-2 px-2 text-xs font-bold rounded-lg transition cursor-pointer flex items-center justify-center gap-1 shrink-0 ${
+                  className={`flex-1 min-w-[72px] sm:min-w-[100px] py-2 px-1.5 sm:px-2 text-xs font-bold rounded-lg transition cursor-pointer flex items-center justify-center gap-1 shrink-0 sm:shrink ${
                     tab === val
                       ? 'bg-red-600 text-white shadow-xs'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                   }`}
                 >
-                  <span className="whitespace-nowrap">{label}</span>
+                  <span className="hidden sm:inline whitespace-nowrap">{label}</span>
+                  <span className="sm:hidden whitespace-nowrap">{shortLabel}</span>
                   <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${tab === val ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
                     {count}
                   </span>
@@ -750,19 +747,20 @@ export default function VolunteerDashboard() {
               ))}
             </div>
 
-            {/* Filter Chips (Mobile Scrollable) */}
-            <div className="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar py-0.5 text-xs">
-              <div className="flex items-center gap-1 shrink-0">
-                <span className="text-slate-400 text-[11px] font-bold mr-1 flex items-center gap-0.5">
-                  <Filter className="w-3 h-3" /> Group:
+            {/* Filter Chips & Priority (Responsive) */}
+            <div className="space-y-2 pt-0.5 min-w-0 w-full">
+              {/* Blood Group Chips (Smooth Scrollable) */}
+              <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 w-full min-w-0">
+                <span className="text-slate-400 text-[11px] font-bold mr-1 flex items-center gap-0.5 shrink-0">
+                  <Filter className="w-3 h-3 text-red-500" /> Group:
                 </span>
                 {['ALL', ...BLOOD_GROUPS].map((bg) => (
                   <button
                     key={bg}
                     onClick={() => setSelectedBloodFilter(bg)}
-                    className={`px-2 py-1 rounded-md text-[11px] font-bold transition cursor-pointer shrink-0 ${
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer shrink-0 ${
                       selectedBloodFilter === bg
-                        ? 'bg-red-600 text-white'
+                        ? 'bg-red-600 text-white shadow-2xs'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
@@ -771,27 +769,44 @@ export default function VolunteerDashboard() {
                 ))}
               </div>
 
-              <div className="flex items-center gap-1 shrink-0">
-                {['ALL', 'Urgent'].map((urg) => (
+              {/* Priority & Quick Reset row */}
+              <div className="flex items-center justify-between gap-2 text-xs pt-1.5 border-t border-slate-100 min-w-0">
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="text-slate-400 text-[11px] font-bold shrink-0">Priority:</span>
+                  {['ALL', 'Urgent'].map((urg) => (
+                    <button
+                      key={urg}
+                      onClick={() => setSelectedUrgencyFilter(urg)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer shrink-0 ${
+                        selectedUrgencyFilter === urg
+                          ? 'bg-slate-900 text-white shadow-2xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {urg === 'Urgent' ? '🚨 Urgent' : 'All Priority'}
+                    </button>
+                  ))}
+                </div>
+
+                {(selectedBloodFilter !== 'ALL' || selectedUrgencyFilter !== 'ALL' || searchQuery) && (
                   <button
-                    key={urg}
-                    onClick={() => setSelectedUrgencyFilter(urg)}
-                    className={`px-2 py-1 rounded-md text-[11px] font-bold transition cursor-pointer shrink-0 ${
-                      selectedUrgencyFilter === urg
-                        ? 'bg-slate-900 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
+                    onClick={() => {
+                      setSelectedBloodFilter('ALL');
+                      setSelectedUrgencyFilter('ALL');
+                      setSearchQuery('');
+                    }}
+                    className="text-[11px] text-red-600 hover:text-red-700 font-semibold cursor-pointer shrink-0 ml-auto"
                   >
-                    {urg}
+                    Reset Filters
                   </button>
-                ))}
+                )}
               </div>
             </div>
 
             {/* Request Cards Stream */}
-            <div className="space-y-3 max-h-[640px] overflow-y-auto pr-0.5 no-scrollbar">
+            <div className="space-y-3 max-h-[640px] overflow-y-auto pr-0.5 no-scrollbar min-w-0 w-full">
               {tabRequests.length === 0 ? (
-                <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200 p-4">
+                <div className="text-center py-10 sm:py-12 text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200 p-4 min-w-0 w-full">
                   <ClipboardList className="w-10 h-10 mx-auto mb-2 opacity-30" />
                   <p className="text-xs font-bold text-slate-600">No requests in this view</p>
                   <p className="text-[11px] text-slate-400 mt-0.5">Try resetting search or filter criteria.</p>
@@ -813,24 +828,24 @@ export default function VolunteerDashboard() {
                   return (
                     <div
                       key={reqId}
-                      className="border border-slate-200 rounded-xl p-3.5 sm:p-4 space-y-3 hover:border-red-200 transition bg-white shadow-2xs"
+                      className="border border-slate-200 rounded-xl p-3 sm:p-4 space-y-3 hover:border-red-200 transition bg-white shadow-2xs min-w-0 overflow-hidden"
                     >
                       {/* Header row */}
-                      <div className="flex items-start justify-between gap-2.5">
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-red-600 text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0">
+                      <div className="flex items-start justify-between gap-2.5 min-w-0">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-red-600 text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-xs">
                             {bg}
                           </span>
-                          <div>
+                          <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">{patient}</h4>
+                              <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight break-words">{patient}</h4>
                               {req.requester_name && (
-                                <span className="text-[10px] text-slate-500 font-medium">
+                                <span className="text-[10px] text-slate-500 font-medium truncate">
                                   by {req.requester_name}
                                 </span>
                               )}
                             </div>
-                            <p className="text-[11px] sm:text-xs text-slate-600 mt-0.5">
+                            <p className="text-[11px] sm:text-xs text-slate-600 mt-0.5 truncate">
                               {hospital}, {city} • <strong>{units} Unit{units > 1 ? 's' : ''}</strong>
                             </p>
                           </div>
@@ -843,11 +858,11 @@ export default function VolunteerDashboard() {
 
                       {/* Contact row */}
                       <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-500 pt-0.5 flex-wrap gap-1">
-                        <p>
+                        <p className="truncate">
                           Contact: <a href={`tel:${contact}`} className="text-red-600 font-semibold hover:underline">{contact || '—'}</a>
                         </p>
                         {req.required_by_date && (
-                          <span className="text-[10px] sm:text-[11px] text-slate-400">
+                          <span className="text-[10px] sm:text-[11px] text-slate-400 shrink-0">
                             Required: {req.required_by_date}
                           </span>
                         )}
@@ -890,52 +905,52 @@ export default function VolunteerDashboard() {
                           <div className="grid grid-cols-2 sm:flex sm:items-center gap-2">
                             <button
                               onClick={() => setSelectedMatchReq(selectedMatchReq === reqId ? null : reqId)}
-                              className="py-2 px-2.5 bg-red-50 text-red-700 text-xs font-bold rounded-lg hover:bg-red-100 transition cursor-pointer border border-red-200 flex items-center justify-center gap-1 text-center"
+                              className="py-2 px-2.5 bg-red-50 text-red-700 text-xs font-bold rounded-lg hover:bg-red-100 transition cursor-pointer border border-red-200 flex items-center justify-center gap-1 text-center min-w-0"
                             >
-                              <Search className="w-3.5 h-3.5" />
-                              <span>{selectedMatchReq === reqId ? 'Hide Donors' : `Match (${compatibleDonors.length})`}</span>
+                              <Search className="w-3.5 h-3.5 shrink-0" />
+                              <span className="truncate">{selectedMatchReq === reqId ? 'Hide Donors' : `Match (${compatibleDonors.length})`}</span>
                             </button>
 
                             <button
                               onClick={() => handleGetTop5(reqId, req)}
                               disabled={loadingTop5}
-                              className="py-2 px-2.5 bg-amber-50 text-amber-800 text-xs font-bold rounded-lg hover:bg-amber-100 transition cursor-pointer border border-amber-200 flex items-center justify-center gap-1 text-center"
+                              className="py-2 px-2.5 bg-amber-50 text-amber-800 text-xs font-bold rounded-lg hover:bg-amber-100 transition cursor-pointer border border-amber-200 flex items-center justify-center gap-1 text-center min-w-0"
                             >
-                              <Star className="w-3.5 h-3.5 text-amber-600" />
-                              <span>Top 5 Donors</span>
+                              <Star className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                              <span className="truncate">Top 5 Donors</span>
                             </button>
 
                             <button
                               onClick={() => handlePoster(reqId)}
-                              className="py-2 px-2.5 bg-slate-100 text-slate-700 text-xs font-bold rounded-lg hover:bg-slate-200 transition cursor-pointer border border-slate-200 flex items-center justify-center gap-1 text-center"
+                              className="py-2 px-2.5 bg-slate-100 text-slate-700 text-xs font-bold rounded-lg hover:bg-slate-200 transition cursor-pointer border border-slate-200 flex items-center justify-center gap-1 text-center min-w-0"
                             >
-                              <Download className="w-3.5 h-3.5 text-red-600" />
-                              <span>Poster</span>
+                              <Download className="w-3.5 h-3.5 text-red-600 shrink-0" />
+                              <span className="truncate">Poster</span>
                             </button>
 
                             <button
                               onClick={() => handleShareWhatsApp(req)}
-                              className="py-2 px-2.5 bg-emerald-50 text-emerald-800 text-xs font-bold rounded-lg hover:bg-emerald-100 transition cursor-pointer border border-emerald-200 flex items-center justify-center gap-1 text-center"
+                              className="py-2 px-2.5 bg-emerald-50 text-emerald-800 text-xs font-bold rounded-lg hover:bg-emerald-100 transition cursor-pointer border border-emerald-200 flex items-center justify-center gap-1 text-center min-w-0"
                               title="Share on WhatsApp"
                             >
-                              <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-                              <span>WhatsApp</span>
+                              <MessageCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span className="truncate">WhatsApp</span>
                             </button>
                           </div>
 
-                          <div className="pt-1 flex items-center justify-between gap-2">
+                          <div className="pt-1 flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
                             <button
                               onClick={() => handleCopyShare(req)}
-                              className="text-[11px] text-slate-500 hover:text-slate-800 font-semibold underline flex items-center gap-1"
+                              className="text-[11px] text-slate-500 hover:text-slate-800 font-semibold underline flex items-center gap-1 truncate"
                             >
-                              {copiedId === reqId ? <Check className="w-3 h-3 text-emerald-600" /> : null}
-                              {copiedId === reqId ? 'Copied Details' : 'Copy Broadcast Text'}
+                              {copiedId === reqId ? <Check className="w-3 h-3 text-emerald-600 shrink-0" /> : null}
+                              <span className="truncate">{copiedId === reqId ? 'Copied Details' : 'Copy Broadcast Text'}</span>
                             </button>
 
                             <button
                               onClick={() => handleFulfill(reqId)}
                               disabled={fulfillingId === reqId}
-                              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition cursor-pointer disabled:opacity-60 ml-auto"
+                              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition cursor-pointer disabled:opacity-60 ml-auto shrink-0"
                             >
                               Mark Fulfilled
                             </button>
@@ -954,8 +969,8 @@ export default function VolunteerDashboard() {
                                   const dName = d.primary_name || d.primaryName || d.name || 'Donor';
                                   const dPhone = d.mobile || d.phone || '';
                                   return (
-                                    <div key={d.id || d._id} className="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200 text-xs gap-2">
-                                      <div className="min-w-0">
+                                    <div key={d.id || d._id} className="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200 text-xs gap-2 min-w-0">
+                                      <div className="min-w-0 flex-1">
                                         <p className="font-bold text-slate-900 truncate">{dName} ({d.blood_group || d.bloodGroup})</p>
                                         <p className="text-[10px] sm:text-[11px] text-slate-500 truncate">{d.city || 'Kasaragod'} • {d.total_donations || 0} donations</p>
                                       </div>
@@ -985,7 +1000,7 @@ export default function VolunteerDashboard() {
                       {isFulfilled && (
                         <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                           <span className="text-emerald-600 font-semibold flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Request Fulfilled
+                            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Request Fulfilled
                           </span>
                           <button onClick={() => handlePoster(reqId)} className="text-red-600 font-bold hover:underline">
                             View Poster
@@ -1002,7 +1017,7 @@ export default function VolunteerDashboard() {
         </div>
 
         {/* ── Right Column: Minimal Scope & Matrix Tools (Mobile Responsive) ── */}
-        <div className="space-y-4">
+        <div className="space-y-4 min-w-0 w-full">
 
           {/* Committee Jurisdiction Scope */}
           <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3">
@@ -1016,22 +1031,22 @@ export default function VolunteerDashboard() {
               </span>
             </div>
 
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-400">District HQ</span>
-                <span className="font-bold text-slate-900">{districtName}</span>
+            <div className="space-y-2 text-xs min-w-0">
+              <div className="flex items-center justify-between py-1 border-b border-slate-100 gap-2">
+                <span className="text-slate-400 shrink-0">District HQ</span>
+                <span className="font-bold text-slate-900 truncate text-right">{districtName}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-400">Block Committee</span>
-                <span className="font-bold text-slate-900">{blockName}</span>
+              <div className="flex items-center justify-between py-1 border-b border-slate-100 gap-2">
+                <span className="text-slate-400 shrink-0">Block Committee</span>
+                <span className="font-bold text-slate-900 truncate text-right">{blockName}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-400">Meghala Unit</span>
-                <span className="font-bold text-red-600">{committeeName}</span>
+              <div className="flex items-center justify-between py-1 border-b border-slate-100 gap-2">
+                <span className="text-slate-400 shrink-0">Meghala Unit</span>
+                <span className="font-bold text-red-600 truncate text-right">{committeeName}</span>
               </div>
-              <div className="flex justify-between py-1">
-                <span className="text-slate-400">Meghala Coordinator</span>
-                <span className="font-bold text-slate-900">{user?.primary_name || user?.name || 'Active'}</span>
+              <div className="flex items-center justify-between py-1 gap-2">
+                <span className="text-slate-400 shrink-0">Meghala Coordinator</span>
+                <span className="font-bold text-slate-900 truncate text-right">{user?.primary_name || user?.name || 'Active'}</span>
               </div>
             </div>
 

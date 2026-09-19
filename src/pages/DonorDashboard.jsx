@@ -619,185 +619,51 @@ export default function DonorDashboard() {
 
       {/* ─── MODALS ─── */}
 
-      {/* Mandatory Minimal Modern Health Info Popup */}
+      {/* Mandatory Minimal & Simple Health Info Popup */}
       <AnimatePresence>
         {showPopup && (
           <div 
-            className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 z-50 select-none overflow-y-auto"
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 select-none overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.94, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.94, y: 20 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="bg-white rounded-3xl w-full max-w-md p-5 sm:p-6 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.35)] relative text-left border border-slate-100 overflow-hidden my-auto"
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white rounded-2xl w-full max-w-sm p-5 sm:p-6 shadow-xl relative text-left border border-slate-100 my-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Dynamic Accent Top Strip */}
-              <div 
-                className={`absolute top-0 inset-x-0 h-1.5 transition-colors duration-500 ${
-                  previewState.color === 'emerald'
-                    ? 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500'
-                    : previewState.color === 'amber'
-                    ? 'bg-gradient-to-r from-amber-500 via-orange-400 to-amber-500'
-                    : previewState.color === 'rose'
-                    ? 'bg-gradient-to-r from-rose-500 via-red-500 to-rose-600'
-                    : 'bg-gradient-to-r from-slate-400 to-slate-600'
-                }`} 
-              />
-
-              {/* Minimal Creative Header */}
-              <div className="flex items-start gap-3.5 pt-1">
-                <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border transition-all duration-300 ${
-                  previewState.color === 'emerald'
-                    ? 'bg-emerald-50 border-emerald-200 text-emerald-600 shadow-sm shadow-emerald-500/20'
-                    : previewState.color === 'amber'
-                    ? 'bg-amber-50 border-amber-200 text-amber-600 shadow-sm shadow-amber-500/20'
-                    : previewState.color === 'rose'
-                    ? 'bg-rose-50 border-rose-200 text-rose-600 shadow-sm shadow-rose-500/20'
-                    : 'bg-slate-100 border-slate-200 text-slate-700'
-                }`}>
-                  {previewState.color === 'emerald' ? (
-                    <CheckCircle2 className="w-5 h-5" />
-                  ) : previewState.color === 'amber' ? (
-                    <Clock className="w-5 h-5" />
-                  ) : previewState.color === 'rose' ? (
-                    <AlertTriangle className="w-5 h-5" />
-                  ) : (
-                    <Heart className="w-5 h-5 fill-red-600/20 text-red-600" />
-                  )}
+              {/* Simple Minimal Header */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                  <Heart className="w-5 h-5 fill-red-600/15" />
                 </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      Medical Registry
-                    </span>
-                    <span className="w-1 h-1 rounded-full bg-slate-300" />
-                    <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider">
-                      Required
-                    </span>
-                  </div>
-                  <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-snug">
-                    Health & Donation Eligibility
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 leading-tight">
+                    Donation Eligibility
                   </h3>
-                  <p className="text-[11px] sm:text-xs text-slate-500 leading-relaxed mt-0.5">
-                    Blood banks require weight ≥ 50 kg and 3-month gap between donations.
+                  <p className="text-xs text-slate-500">
+                    Verify weight & donation interval
                   </p>
                 </div>
               </div>
 
-              {/* Creative Live Status Card with Cooldown Visualizer */}
-              <div className={`mt-4 p-3.5 rounded-2xl border transition-all duration-300 space-y-2.5 ${
-                previewState.color === 'emerald'
-                  ? 'bg-emerald-50/70 border-emerald-200/90 text-emerald-950'
-                  : previewState.color === 'amber'
-                  ? 'bg-amber-50/70 border-amber-200/90 text-amber-950'
-                  : previewState.color === 'rose'
-                  ? 'bg-rose-50/70 border-rose-200/90 text-rose-950'
-                  : 'bg-slate-50 border-slate-200 text-slate-800'
-              }`}>
-                {/* Status Badges Row */}
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider shadow-2xs ${
-                    previewState.color === 'emerald'
-                      ? 'bg-emerald-600 text-white'
-                      : previewState.color === 'amber'
-                      ? 'bg-amber-500 text-white'
-                      : previewState.color === 'rose'
-                      ? 'bg-rose-600 text-white'
-                      : 'bg-slate-300 text-slate-800'
-                  }`}>
-                    {previewState.isEligible ? (
-                      <CheckCircle2 className="w-3 h-3" />
-                    ) : (
-                      <Clock className="w-3 h-3" />
-                    )}
-                    <span>{previewState.isEligible ? 'Eligible Donor' : 'Non-Eligible'}</span>
-                  </span>
-
-                  <span className={`text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 ${
-                    previewState.donationActive ? 'text-emerald-700' : 'text-slate-500'
-                  }`}>
-                    <span className={`w-2 h-2 rounded-full ${
-                      previewState.donationActive 
-                        ? 'bg-emerald-500 animate-pulse ring-4 ring-emerald-400/20' 
-                        : 'bg-slate-400'
-                    }`} />
-                    <span>{previewState.donationActive ? 'Donation: ACTIVE' : 'Donation: INACTIVE'}</span>
-                  </span>
-                </div>
-
-                {/* Dual Criteria Mini Badges */}
-                <div className="grid grid-cols-2 gap-1.5 pt-0.5">
-                  <div className="px-2.5 py-1.5 rounded-xl bg-white/80 border border-slate-200/60 flex items-center justify-between text-[10px] font-bold">
-                    <span className="text-slate-500">3-Month Gap:</span>
-                    <span className={neverDonated || previewState.dateCheck?.isIntervalEligible ? 'text-emerald-600' : previewState.dateCheck ? 'text-amber-600' : 'text-slate-400'}>
-                      {neverDonated ? 'First-Time ✨' : previewState.dateCheck?.isIntervalEligible ? 'Passed (3+ Mo)' : previewState.dateCheck ? `${previewState.dateCheck.daysLeft}d left` : 'Pending'}
-                    </span>
-                  </div>
-                  <div className="px-2.5 py-1.5 rounded-xl bg-white/80 border border-slate-200/60 flex items-center justify-between text-[10px] font-bold">
-                    <span className="text-slate-500">Weight Metric:</span>
-                    <span className={previewState.isWeightEligible ? 'text-emerald-600' : previewState.hasWeight ? 'text-rose-600' : 'text-slate-400'}>
-                      {previewState.isWeightEligible ? '≥ 50 kg (OK)' : previewState.hasWeight ? '< 50 kg (Low)' : 'Min 50 kg'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Cooldown Progress Bar (Visible when within 3 months cooldown) */}
-                {previewState.dateCheck && !previewState.dateCheck.isIntervalEligible && !previewState.dateCheck.isFuture && !neverDonated && (
-                  <div className="space-y-1 pt-1">
-                    <div className="flex items-center justify-between text-[10px] font-bold text-amber-800">
-                      <span>Cooldown: {previewState.dateCheck.diffDays} of 90 days</span>
-                      <span>Next Eligible: {previewState.dateCheck.eligibleDate}</span>
-                    </div>
-                    <div className="w-full h-2 bg-amber-200/60 rounded-full overflow-hidden p-0.5 border border-amber-300/40">
-                      <div 
-                        className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500"
-                        style={{ width: `${previewState.dateCheck.progressPercent}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <p className="text-[11px] opacity-85 leading-relaxed pt-0.5">
-                  {previewState.desc}
-                </p>
-              </div>
-
               {/* Error Alert if any */}
               {formError && (
-                <div className="mt-3 p-3 bg-red-50 rounded-xl border border-red-200 text-xs text-red-700 flex items-center gap-2">
+                <div className="mb-3.5 p-2.5 bg-red-50 rounded-xl border border-red-200 text-xs text-red-700 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
                   <span>{formError}</span>
                 </div>
               )}
 
-              <form onSubmit={handleSaveHealthInfo} className="space-y-4 pt-3">
-
-                {/* Creative Pill Switcher: Donated Before vs First-Time */}
+              <form onSubmit={handleSaveHealthInfo} className="space-y-4">
+                {/* 1. Donation History Toggle */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
-                    Donation History
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    Have you donated blood before?
                   </label>
-                  <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-2xl gap-1 border border-slate-200/60">
-                    <button
-                      type="button"
-                      onClick={() => { 
-                        setNeverDonated(false); 
-                        if (formError) setFormError(''); 
-                      }}
-                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                        !neverDonated 
-                          ? 'bg-white text-slate-900 shadow-xs border border-slate-200/60' 
-                          : 'text-slate-500 hover:text-slate-900'
-                      }`}
-                    >
-                      <Clock className={`w-3.5 h-3.5 ${!neverDonated ? 'text-red-600' : ''}`} />
-                      <span>Donated Before</span>
-                    </button>
-                    
+                  <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-xl gap-1">
                     <button
                       type="button"
                       onClick={() => { 
@@ -805,38 +671,80 @@ export default function DonorDashboard() {
                         setLastDonated(''); 
                         if (formError) setFormError(''); 
                       }}
-                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      className={`py-2 px-3 rounded-lg text-xs font-semibold transition cursor-pointer ${
                         neverDonated 
-                          ? 'bg-white text-slate-900 shadow-xs border border-slate-200/60' 
+                          ? 'bg-white text-slate-900 shadow-xs' 
                           : 'text-slate-500 hover:text-slate-900'
                       }`}
                     >
-                      <Sparkles className={`w-3.5 h-3.5 ${neverDonated ? 'text-amber-500' : ''}`} />
-                      <span>First-Time Donor</span>
+                      First-Time Donor
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { 
+                        setNeverDonated(false); 
+                        if (formError) setFormError(''); 
+                      }}
+                      className={`py-2 px-3 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                        !neverDonated 
+                          ? 'bg-white text-slate-900 shadow-xs' 
+                          : 'text-slate-500 hover:text-slate-900'
+                      }`}
+                    >
+                      Donated Before
                     </button>
                   </div>
                 </div>
 
-                {/* Weight Input with Quick Stepper Chips */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                      <Scale className="w-3.5 h-3.5 text-red-600" />
-                      <span>Body Weight</span>
-                      <span className="text-red-500">*</span>
+                {/* 2. Last Donated Date (if Donated Before) */}
+                {!neverDonated && (
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-slate-700">
+                        Last Donation Date
+                      </label>
+                      <span className="text-[11px] text-slate-400">3-month gap rule</span>
+                    </div>
+
+                    <input
+                      type="date"
+                      max={new Date().toISOString().split('T')[0]}
+                      required={!neverDonated}
+                      value={lastDonated}
+                      onChange={(e) => {
+                        setLastDonated(e.target.value);
+                        if (formError) setFormError('');
+                      }}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-900 cursor-pointer"
+                    />
+
+                    {/* Simple Date Status Feedback */}
+                    {previewState.dateCheck && !previewState.dateCheck.isFuture && (
+                      <p className={`text-[11px] font-medium pt-0.5 ${
+                        previewState.dateCheck.isIntervalEligible ? 'text-emerald-600' : 'text-amber-600'
+                      }`}>
+                        {previewState.dateCheck.isIntervalEligible 
+                          ? `✓ Donated ${previewState.dateCheck.diffDays} days ago (3+ months passed)`
+                          : `⚠️ Cooldown active: ${previewState.dateCheck.daysLeft} days remaining (Eligible: ${previewState.dateCheck.eligibleDate})`}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* 3. Weight Input */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-slate-700">
+                      Body Weight
                     </label>
-                    <span className={`text-[10px] font-bold ${
+                    <span className={`text-[11px] font-medium ${
                       Number(weight) >= 50 
                         ? 'text-emerald-600' 
                         : Number(weight) > 0 
                         ? 'text-rose-600' 
                         : 'text-slate-400'
                     }`}>
-                      {Number(weight) >= 50 
-                        ? '✓ ≥ 50 kg Eligible' 
-                        : Number(weight) > 0 
-                        ? '⚠️ < 50 kg Non-Eligible' 
-                        : 'Min 50 kg required'}
+                      {Number(weight) >= 50 ? '✓ Weight OK' : 'Min 50 kg required'}
                     </span>
                   </div>
 
@@ -852,18 +760,17 @@ export default function DonorDashboard() {
                         setWeight(e.target.value);
                         if (formError) setFormError('');
                       }}
-                      placeholder="Enter weight in kg (e.g. 62)"
-                      className="w-full pl-3.5 pr-12 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-900 transition"
+                      placeholder="e.g. 60"
+                      className="w-full pl-3 pr-10 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-900"
                     />
-                    <span className="absolute right-3.5 text-[11px] font-black text-slate-400 pointer-events-none">
-                      KG
+                    <span className="absolute right-3 text-xs font-semibold text-slate-400 pointer-events-none">
+                      kg
                     </span>
                   </div>
 
-                  {/* Preset Chips */}
-                  <div className="flex items-center gap-1.5 mt-1.5 overflow-x-auto no-scrollbar py-0.5">
-                    <span className="text-[10px] text-slate-400 font-semibold shrink-0">Presets:</span>
-                    {[50, 55, 60, 65, 70, 75].map((w) => (
+                  {/* Minimal Presets */}
+                  <div className="flex items-center gap-1.5 pt-0.5">
+                    {[50, 55, 60, 65, 70].map((w) => (
                       <button
                         key={w}
                         type="button"
@@ -871,112 +778,63 @@ export default function DonorDashboard() {
                           setWeight(String(w));
                           if (formError) setFormError('');
                         }}
-                        className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition cursor-pointer shrink-0 ${
+                        className={`flex-1 py-1 rounded-lg text-[11px] font-medium transition cursor-pointer border ${
                           Number(weight) === w
-                            ? 'bg-red-600 text-white shadow-2xs'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            ? 'bg-slate-900 text-white border-slate-900'
+                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                         }`}
                       >
-                        {w} kg
+                        {w}
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Last Donated Date Input (Conditional on "Donated Before") */}
-                {!neverDonated && (
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-red-600" />
-                        <span>Last Blood Donation Date</span>
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <span className="text-[10px] text-slate-400 font-semibold">3-Month Gap Rule</span>
-                    </div>
+                {/* 4. Minimal Inline Status Indicator */}
+                <div className={`p-2.5 rounded-xl border text-xs flex items-center justify-between ${
+                  previewState.donationActive
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                    : 'bg-slate-50 border-slate-200 text-slate-600'
+                }`}>
+                  <span className="font-medium">
+                    {previewState.donationActive ? 'Ready to Donate' : 'Eligibility Status'}
+                  </span>
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    previewState.donationActive 
+                      ? 'bg-emerald-600 text-white' 
+                      : 'bg-slate-200 text-slate-700'
+                  }`}>
+                    {previewState.donationActive ? '● Active' : '○ Inactive'}
+                  </span>
+                </div>
 
-                    <input
-                      type="date"
-                      max={new Date().toISOString().split('T')[0]}
-                      required={!neverDonated}
-                      value={lastDonated}
-                      onChange={(e) => {
-                        setLastDonated(e.target.value);
-                        if (formError) setFormError('');
-                      }}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-900 cursor-pointer transition"
-                    />
-
-                    {/* Quick Date Shortcuts for Frictionless Selection */}
-                    <div className="flex items-center gap-1.5 pt-0.5">
-                      <span className="text-[10px] text-slate-400 font-semibold shrink-0">Quick Pick:</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const d = new Date();
-                          d.setDate(d.getDate() - 95); // 95 days ago (Eligible 3+ months)
-                          setLastDonated(d.toISOString().split('T')[0]);
-                          if (formError) setFormError('');
-                        }}
-                        className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 transition cursor-pointer"
-                      >
-                        ✓ 3+ Months Ago (Eligible)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const d = new Date();
-                          d.setDate(d.getDate() - 30); // 30 days ago (Within 3 months)
-                          setLastDonated(d.toISOString().split('T')[0]);
-                          if (formError) setFormError('');
-                        }}
-                        className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 transition cursor-pointer"
-                      >
-                        ⏳ 1 Month Ago (Cooldown)
-                      </button>
-                    </div>
-
-                    <p className="text-[10px] text-slate-400 leading-tight pt-0.5">
-                      Donating blood <strong>3+ months (90+ days) ago</strong> makes status <strong>ACTIVE</strong>. Donating within 3 months marks status <strong>INACTIVE & NON-ELIGIBLE</strong>.
-                    </p>
-                  </div>
-                )}
-
-                {/* Action Submit Button */}
-                <div className="pt-2">
+                {/* 5. Clean Action Button */}
+                <div className="pt-1">
                   <button
                     type="submit"
                     disabled={isSaving}
-                    className={`w-full py-3.5 text-xs font-black uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 active:scale-[0.99] shadow-md ${
+                    className={`w-full py-2.5 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 shadow-xs ${
                       previewState.donationActive
-                        ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-emerald-600/30'
-                        : 'bg-slate-900 hover:bg-slate-950 text-white shadow-slate-900/20'
+                        ? 'bg-red-600 hover:bg-red-700 text-white'
+                        : 'bg-slate-900 hover:bg-slate-800 text-white'
                     }`}
                   >
                     {isSaving ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Saving Health Log...</span>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Saving...</span>
                       </>
                     ) : previewState.donationActive ? (
-                      <>
-                        <CheckCircle2 className="w-4 h-4 text-white" />
-                        <span>Submit & Activate Blood Donation (ACTIVE)</span>
-                      </>
+                      <span>Save & Activate Donation</span>
                     ) : (
-                      <>
-                        <ShieldAlert className="w-4 h-4 text-amber-400" />
-                        <span>Submit Health Info (Status: INACTIVE)</span>
-                      </>
+                      <span>Save Health Info</span>
                     )}
                   </button>
 
-                  <p className="text-[10px] text-slate-400 text-center mt-2.5 flex items-center justify-center gap-1">
-                    <span>🔒</span>
-                    <span>Mandatory medical verification. Cannot be skipped without completion.</span>
+                  <p className="text-[10px] text-slate-400 text-center mt-2">
+                    Required for donor safety standards.
                   </p>
                 </div>
-
               </form>
             </motion.div>
           </div>

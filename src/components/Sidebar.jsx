@@ -62,7 +62,7 @@ const blockAdminLinks = [
 
 const superAdminLinks = [
   { to: '/super-admin/dashboard', label: 'District Dashboard', icon: LayoutDashboard },
-  { to: '/super-admin/mailbox', label: 'Hostinger Mailbox', icon: Mail },
+  { to: '/super-admin/mailbox', label: 'Mailbox', icon: Mail },
   { to: '/super-admin/points', label: 'District Points Table', icon: Trophy },
   { to: '/admin/awareness', label: 'Awareness Video & Content', icon: Video },
   { to: '/volunteer/accepted-donors', label: 'Accepted Donors', icon: HeartHandshake },
@@ -77,7 +77,7 @@ const superAdminLinks = [
 
 const technicalAdminLinks = [
   { to: '/technical-admin/dashboard', label: 'Technical Dashboard', icon: LayoutDashboard },
-  { to: '/super-admin/mailbox', label: 'Hostinger Mailbox', icon: Mail },
+  { to: '/super-admin/mailbox', label: 'Mailbox', icon: Mail },
   { to: '/admin/awareness', label: 'Awareness Video & Content', icon: Video },
   { to: '/campaigns', label: 'Campaign Hub', icon: Megaphone },
   { to: '/technical-reports', label: 'Tech Reports Queue', icon: ShieldAlert },

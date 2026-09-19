@@ -989,8 +989,8 @@ export default function BlockCommitteeManagement() {
                         </div>
                       </div>
 
-                      {/* Action buttons - always visible on mobile, hover-only on desktop */}
-                      <div className="flex items-center gap-1.5 shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      {/* Action buttons - hidden on mobile (squeezes name), hover-only on desktop */}
+                      <div className="hidden sm:flex items-center gap-1.5 shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         {isAssigned && (c.rawAdmin || c.id) ? (
                           <>
                             {c.status === 'Active' ? (

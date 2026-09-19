@@ -479,7 +479,7 @@ export default function Mailbox() {
                       {activeMailbox?.emailAddress || 'contact@idonatedyfiksd.in'}
                     </p>
                     <p className="text-[11px] text-[#5f6368] dark:text-[#c4c7c5]">
-                      Hostinger Connected
+                      Connected
                     </p>
                   </div>
                 </div>

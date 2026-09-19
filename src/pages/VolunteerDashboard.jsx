@@ -477,17 +477,17 @@ export default function VolunteerDashboard() {
   const districtName = dashboardData?.jurisdiction?.district || user?.district || user?.district_name || 'Kasaragod';
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-4 sm:space-y-6 text-left px-2 sm:px-4 lg:px-6 pb-24 lg:pb-16 select-none">
+    <div className="w-full max-w-7xl mx-auto space-y-4 sm:space-y-6 text-left px-0 sm:px-4 lg:px-6 pb-24 lg:pb-16 min-w-0">
 
       {/* ─── Clean Minimal Header (Mobile Responsive) ─── */}
-      <div className="bg-red-600 text-white rounded-2xl p-4 sm:p-6 lg:p-7 shadow-sm">
+      <div className="bg-red-600 text-white rounded-2xl p-4 sm:p-6 lg:p-7 shadow-sm min-w-0">
         <div className="flex flex-col gap-4">
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-2 py-0.5 rounded-md bg-white text-red-700 font-black text-[11px] sm:text-xs uppercase tracking-wider shadow-xs">
+              <span className="px-2 py-0.5 rounded-md bg-white text-red-700 font-black text-[11px] sm:text-xs uppercase tracking-wider shadow-xs shrink-0">
                 DYFI
               </span>
-              <h1 className="text-lg sm:text-2xl font-black tracking-tight text-white leading-tight">
+              <h1 className="text-lg sm:text-2xl font-black tracking-tight text-white leading-tight break-words">
                 {committeeName}
               </h1>
             </div>
@@ -502,43 +502,43 @@ export default function VolunteerDashboard() {
           </div>
 
           {/* Quick Action Buttons Grid (Mobile Friendly) */}
-          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 pt-1">
+          <div className="grid grid-cols-2 sm:flex sm:items-center sm:flex-wrap gap-2 pt-1 min-w-0">
             <Link
               to="/volunteer/accepted-donors"
-              className="px-3 py-2 bg-white text-red-700 hover:bg-red-50 font-bold text-xs rounded-xl transition shadow-xs flex items-center justify-center gap-1.5 text-center"
+              className="px-3 py-2 bg-white text-red-700 hover:bg-red-50 font-bold text-xs rounded-xl transition shadow-xs flex items-center justify-center gap-1.5 text-center min-w-0"
             >
               <HeartHandshake className="w-4 h-4 text-red-600 shrink-0" />
-              <span>Accepted Donors</span>
+              <span className="truncate">Accepted Donors</span>
             </Link>
 
             <Link
               to="/volunteer/users"
-              className="px-3 py-2 bg-red-700 hover:bg-red-800 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-1.5 border border-red-500/40 text-center"
+              className="px-3 py-2 bg-red-700 hover:bg-red-800 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-1.5 border border-red-500/40 text-center min-w-0"
             >
               <Users className="w-4 h-4 shrink-0" />
-              <span>Users</span>
+              <span className="truncate">Users</span>
             </Link>
 
             <Link
               to="/volunteer/unit-committee"
-              className="px-3 py-2 bg-red-700 hover:bg-red-800 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-1.5 border border-red-500/40 text-center"
+              className="px-3 py-2 bg-red-700 hover:bg-red-800 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-1.5 border border-red-500/40 text-center min-w-0"
             >
               <Building2 className="w-4 h-4 shrink-0" />
-              <span>Unit Squad</span>
+              <span className="truncate">Unit Squad</span>
             </Link>
 
             <Link
               to="/volunteer/feedback"
-              className="px-3 py-2 bg-red-700 hover:bg-red-800 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-1.5 border border-red-500/40 text-center"
+              className="px-3 py-2 bg-red-700 hover:bg-red-800 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-1.5 border border-red-500/40 text-center min-w-0"
             >
               <MessageSquare className="w-4 h-4 shrink-0" />
-              <span>Feedback</span>
+              <span className="truncate">Feedback</span>
             </Link>
 
             <button
               onClick={handleRefreshAll}
               disabled={loadingPending}
-              className="px-3 py-2 bg-red-700 hover:bg-red-800 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60 border border-red-500/40 text-center"
+              className="col-span-2 sm:col-auto px-3 py-2 bg-red-700 hover:bg-red-800 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60 border border-red-500/40 text-center min-w-0"
               title="Refresh Data"
             >
               <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${loadingPending ? 'animate-spin' : ''}`} />
@@ -549,7 +549,7 @@ export default function VolunteerDashboard() {
       </div>
 
       {/* ─── Minimal Overview Stat Cards (Responsive 2x2 Grid) ─── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 min-w-0 w-full">
         {stats.map((s) => {
           const Icon = s.icon;
           const isSelected = (tab === s.id);
@@ -562,15 +562,15 @@ export default function VolunteerDashboard() {
                   setTab(s.id);
                 }
               }}
-              className={`bg-white rounded-2xl p-3.5 sm:p-5 border ${s.borderAccent} shadow-xs transition hover:border-red-300 cursor-pointer flex items-center justify-between ${
+              className={`bg-white rounded-2xl p-3 sm:p-5 border ${s.borderAccent} shadow-xs transition hover:border-red-300 cursor-pointer flex items-center justify-between min-w-0 ${
                 isSelected ? 'ring-2 ring-red-500/30 border-red-500' : ''
               }`}
             >
-              <div>
-                <p className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
+              <div className="min-w-0 flex-1 pr-2">
+                <p className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none truncate">
                   {s.value}
                 </p>
-                <p className="text-[11px] sm:text-xs font-medium text-slate-500 mt-1">
+                <p className="text-[11px] sm:text-xs font-medium text-slate-500 mt-1 truncate">
                   {s.label}
                 </p>
               </div>
@@ -578,6 +578,10 @@ export default function VolunteerDashboard() {
               <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl ${s.iconBg} ${s.iconColor} flex items-center justify-center shrink-0`}>
                 <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
+            </div>
+          );
+        })}
+      </div>
             </div>
           );
         })}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore.js';
 import { useAppStore } from '../store/appStore.js';
@@ -7,7 +7,8 @@ import {
   Loader2, X, Phone, RefreshCw,
   Heart, Siren, Droplet, Send, ShieldAlert, ShieldCheck,
   Share2, MapPin, Headphones, MessageSquare,
-  Scale, Calendar, AlertCircle, CheckCircle2
+  Scale, Calendar, AlertCircle, CheckCircle2,
+  Clock, Sparkles, AlertTriangle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Modal from '../components/Modal.jsx';
@@ -38,6 +39,123 @@ export default function DonorDashboard() {
       setNeverDonated(false);
     }
   }, [user]);
+
+  // Real-time live eligibility & 3-month calculation
+  const previewState = useMemo(() => {
+    const numW = Number(weight);
+    const hasWeight = !isNaN(numW) && numW > 0;
+
+    if (!hasWeight && !neverDonated && !lastDonated) {
+      return {
+        status: 'initial',
+        isEligible: false,
+        badge: 'Pending Health Data',
+        title: 'Complete details to evaluate status',
+        donationActive: false,
+        donationStatusText: 'Status: INACTIVE',
+        desc: 'Please enter your current body weight and donation history below.',
+        color: 'slate',
+      };
+    }
+
+    if (hasWeight && numW < 50) {
+      return {
+        status: 'underweight',
+        isEligible: false,
+        badge: 'Below 50 kg Criteria',
+        title: 'Non-Eligible (< 50 kg)',
+        donationActive: false,
+        donationStatusText: 'Status: INACTIVE',
+        desc: `Entered weight is ${numW} kg. Medical standards require a minimum body weight of 50 kg to donate blood.`,
+        color: 'rose',
+      };
+    }
+
+    if (!neverDonated && lastDonated) {
+      const last = new Date(lastDonated);
+      const today = new Date();
+      if (last > today) {
+        return {
+          status: 'future_date',
+          isEligible: false,
+          badge: 'Invalid Date',
+          title: 'Selected date is in the future',
+          donationActive: false,
+          donationStatusText: 'Status: INACTIVE',
+          desc: 'Please pick a past date when you previously donated blood.',
+          color: 'rose',
+        };
+      }
+
+      const diffTime = Math.abs(today - last);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      // 3 Months = 90 days interval rule
+      if (diffDays < 90) {
+        const daysLeft = 90 - diffDays;
+        const eligibleDate = new Date(last.getTime() + 90 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        });
+        return {
+          status: 'cooldown',
+          isEligible: false,
+          diffDays,
+          daysLeft,
+          eligibleDate,
+          badge: `3-Month Cooldown (${daysLeft} Days Left)`,
+          title: 'Non-Eligible (Within 3 Months)',
+          donationActive: false,
+          donationStatusText: 'Status: INACTIVE',
+          desc: `Donated ${diffDays} days ago. A 3-month gap is required. You will become eligible on ${eligibleDate}.`,
+          color: 'amber',
+        };
+      } else {
+        const monthsAgo = Math.floor(diffDays / 30);
+        const weightOk = hasWeight ? numW >= 50 : false;
+        return {
+          status: 'eligible',
+          isEligible: weightOk,
+          diffDays,
+          monthsAgo,
+          badge: '✓ 3+ Months Interval Passed',
+          title: weightOk ? 'Eligible to Donate Blood' : '3-Month Gap Verified',
+          donationActive: weightOk,
+          donationStatusText: weightOk ? 'Status: ACTIVE' : 'Status: INACTIVE',
+          desc: `Last donated ${diffDays} days (~${monthsAgo} months) ago. You meet the 3-month medical requirement!`,
+          color: weightOk ? 'emerald' : 'rose',
+        };
+      }
+    }
+
+    if (neverDonated) {
+      const weightOk = hasWeight ? numW >= 50 : false;
+      return {
+        status: 'first_time',
+        isEligible: weightOk,
+        badge: '✨ First-Time Hero',
+        title: weightOk ? 'Eligible to Donate Blood' : 'First-Time Donor',
+        donationActive: weightOk,
+        donationStatusText: weightOk ? 'Status: ACTIVE' : 'Status: INACTIVE',
+        desc: weightOk
+          ? 'No cooldown required! With weight ≥ 50 kg, your blood donation status will be marked ACTIVE upon submit.'
+          : 'First-time donors with weight ≥ 50 kg become immediately active.',
+        color: weightOk ? 'emerald' : 'slate',
+      };
+    }
+
+    return {
+      status: 'pending_date',
+      isEligible: false,
+      badge: 'Select Donation History',
+      title: 'Choose date or First-Time',
+      donationActive: false,
+      donationStatusText: 'Status: INACTIVE',
+      desc: 'Select your last donation date or choose First-Time Donor.',
+      color: 'slate',
+    };
+  }, [weight, lastDonated, neverDonated]);
 
   // Technical Report Modal
   const [showReportModal, setShowReportModal] = useState(false);
@@ -85,7 +203,7 @@ export default function DonorDashboard() {
     }
 
     if (!neverDonated && !lastDonated) {
-      setFormError('Please select your last donation date or check "First-time donor".');
+      setFormError('Please select your last donation date or select "First-Time Donor".');
       return;
     }
 
@@ -100,24 +218,25 @@ export default function DonorDashboard() {
 
     setIsSaving(true);
 
-    // Determine donation eligibility based on entered health data
+    // 3-Month interval rule & weight >= 50kg check
     let isEligible = false;
     let reasonText = '';
 
     if (numWeight < 50) {
       isEligible = false;
-      reasonText = 'Minimum weight of 50 kg is required for donation. Your donation status is set to Inactive for safety.';
+      reasonText = 'Minimum weight of 50 kg is required for donation. Donation status is set to INACTIVE.';
     } else if (!neverDonated && lastDonated) {
       const last = new Date(lastDonated);
       const diffTime = Math.abs(new Date() - last);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       if (diffDays < 90) {
         isEligible = false;
-        reasonText = `You are in a ${90 - diffDays} days donation cooldown period.`;
+        const daysLeft = 90 - diffDays;
+        reasonText = `Donation within 3 months cooldown (${daysLeft} days remaining). Donation status is set to INACTIVE.`;
       } else {
         isEligible = true;
       }
-    } else {
+    } else if (neverDonated && numWeight >= 50) {
       isEligible = true;
     }
 
@@ -127,17 +246,29 @@ export default function DonorDashboard() {
       lastDonated: neverDonated ? null : lastDonated,
       available_for_donation: isEligible,
       availableForDonation: isEligible,
+      eligibility_status: isEligible ? 'Eligible' : 'Ineligible',
+      eligibilityStatus: isEligible ? 'Eligible' : 'Ineligible',
     };
 
     try {
       const res = await updateProfile(payload);
+
+      // Also sync with donor eligibility endpoint
+      try {
+        await api.post('/donors/eligibility', {
+          eligibility_status: isEligible ? 'Eligible' : 'Ineligible'
+        });
+      } catch (err) {
+        console.warn('Syncing eligibility status endpoint:', err);
+      }
+
       if (res?.success) {
         if (isEligible) {
           await setAvailability(true);
-          triggerToast('Health log saved! You are now Active and Available to donate blood 🎉', 'success');
+          triggerToast('Health log saved! Your donation status is now ACTIVE 🎉', 'success');
         } else {
           await setAvailability(false);
-          triggerToast(`Health log saved. ${reasonText}`, 'warning');
+          triggerToast(reasonText || 'Health log saved. Donation status is INACTIVE.', 'warning');
         }
         setShowPopup(false);
       } else {

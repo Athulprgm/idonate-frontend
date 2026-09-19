@@ -4,7 +4,7 @@ import {
   ShieldCheck, Plus, RefreshCw, Edit3, Trash2, X, Building2,
   UserCheck, BarChart3, TrendingUp, Search, Phone, MapPin,
   Droplets, Flame, CheckCircle2, Award, ArrowUpRight,
-  Trophy, AlertCircle, Video, Film, Image, Upload, Save, Sparkles
+  Trophy, AlertCircle, Video, Film, Image, Upload, Save, Sparkles, Mail
 } from 'lucide-react';
 import api from '../../store/api.js';
 import { useAuthStore } from '../../store/authStore.js';
@@ -586,7 +586,13 @@ export default function SuperAdminDashboard() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+            <Link
+              to="/super-admin/mailbox"
+              className="px-3.5 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+            >
+              <Mail className="w-4 h-4 text-red-400" /> Mailbox
+            </Link>
             <Link
               to="/super-admin/points"
               className="px-3.5 py-2.5 bg-amber-50 hover:bg-amber-100 active:scale-95 border border-amber-200 text-amber-900 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"

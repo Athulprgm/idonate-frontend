@@ -5,7 +5,7 @@ import { useAppStore } from '../store/appStore.js';
 import {
   LayoutDashboard, Users, Droplets, User,
   Settings, ClipboardList, ShieldCheck, LogOut, ChevronRight, ShieldAlert, Search,
-  Building2, Megaphone, HeartHandshake, X, Headphones, Trophy, Video, MessageSquare
+  Building2, Megaphone, HeartHandshake, X, Headphones, Trophy, Video, MessageSquare, Mail
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import JeevaLinkLogo from './JeevaLinkLogo.jsx';
@@ -62,6 +62,7 @@ const blockAdminLinks = [
 
 const superAdminLinks = [
   { to: '/super-admin/dashboard', label: 'District Dashboard', icon: LayoutDashboard },
+  { to: '/super-admin/mailbox', label: 'Hostinger Mailbox', icon: Mail },
   { to: '/super-admin/points', label: 'District Points Table', icon: Trophy },
   { to: '/admin/awareness', label: 'Awareness Video & Content', icon: Video },
   { to: '/volunteer/accepted-donors', label: 'Accepted Donors', icon: HeartHandshake },
@@ -76,6 +77,7 @@ const superAdminLinks = [
 
 const technicalAdminLinks = [
   { to: '/technical-admin/dashboard', label: 'Technical Dashboard', icon: LayoutDashboard },
+  { to: '/super-admin/mailbox', label: 'Hostinger Mailbox', icon: Mail },
   { to: '/admin/awareness', label: 'Awareness Video & Content', icon: Video },
   { to: '/campaigns', label: 'Campaign Hub', icon: Megaphone },
   { to: '/technical-reports', label: 'Tech Reports Queue', icon: ShieldAlert },

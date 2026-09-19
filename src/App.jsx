@@ -71,6 +71,7 @@ const SuperAdminManagement = safeLazy(() => import('./pages/admin/SuperAdminMana
 const BlockCommitteeManagement = safeLazy(() => import('./pages/admin/BlockCommitteeManagement.jsx'));
 const DistrictPointsTable = safeLazy(() => import('./pages/admin/DistrictPointsTable.jsx'));
 const AwarenessManagement = safeLazy(() => import('./pages/admin/AwarenessManagement.jsx'));
+const Mailbox = safeLazy(() => import('./pages/admin/Mailbox.jsx'));
 
 // V2 Common & Public Pages
 const Leaderboard = safeLazy(() => import('./pages/Leaderboard.jsx'));
@@ -294,6 +295,12 @@ export default function App() {
                   </ProtectedRoute>
                 } />
                 <Route path="/super-admin" element={<Navigate to="/super-admin/dashboard" replace />} />
+                <Route path="/super-admin/mailbox" element={
+                  <ProtectedRoute roles={['super_admin', 'technical_admin']}>
+                    <Mailbox />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/mailbox" element={<Navigate to="/super-admin/mailbox" replace />} />
                 <Route path="/super-admin/points" element={
                   <ProtectedRoute roles={['super_admin', 'technical_admin']}>
                     <DistrictPointsTable />

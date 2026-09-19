@@ -478,21 +478,19 @@ export default function Mailbox() {
                   <p>Storage used: {formatBytes(quota?.storageUsed)} of {formatBytes(quota?.storageLimit || 10737418240)}</p>
                 </div>
 
-                <div className="pt-2 border-t border-[#e0e2ec] dark:border-[#444746] flex flex-col gap-1.5">
+                <div className="pt-2 border-t border-[#e0e2ec] dark:border-[#444746] flex flex-col gap-2">
+                  <div className="flex items-center gap-1.5 px-2 py-1 bg-[#f2f6fc] dark:bg-[#333537] rounded-lg">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span className="text-[11px] text-[#444746] dark:text-[#c4c7c5]">
+                      Direct entry via .env credentials
+                    </span>
+                  </div>
                   <button
-                    onClick={() => {
-                      setShowAccountMenu(false);
-                      setIsConnected(false);
-                    }}
-                    className="w-full py-2 px-3 rounded-lg hover:bg-[#f2f6fc] dark:hover:bg-[#333537] text-left text-xs font-medium text-[#1f1f1f] dark:text-white cursor-pointer"
+                    onClick={handleRefreshMailbox}
+                    className="w-full py-2 px-3 rounded-lg hover:bg-[#f2f6fc] dark:hover:bg-[#333537] text-left text-xs font-medium text-[#0b57d0] dark:text-[#a8c7fa] cursor-pointer flex items-center gap-2"
                   >
-                    Switch Account
-                  </button>
-                  <button
-                    onClick={handleSignOut}
-                    className="w-full py-2 px-3 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/20 text-left text-xs font-medium text-[#b3261e] cursor-pointer"
-                  >
-                    Sign out of Gmail
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Refresh Mailbox</span>
                   </button>
                 </div>
               </div>

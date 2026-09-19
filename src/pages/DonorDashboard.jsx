@@ -43,117 +43,158 @@ export default function DonorDashboard() {
   // Real-time live eligibility & 3-month calculation
   const previewState = useMemo(() => {
     const numW = Number(weight);
-    const hasWeight = !isNaN(numW) && numW > 0;
+    const hasWeight = weight !== '' && !isNaN(numW) && numW > 0;
+    const isWeightEligible = hasWeight && numW >= 50;
 
-    if (!hasWeight && !neverDonated && !lastDonated) {
-      return {
-        status: 'initial',
-        isEligible: false,
-        badge: 'Pending Health Data',
-        title: 'Complete details to evaluate status',
-        donationActive: false,
-        donationStatusText: 'Status: INACTIVE',
-        desc: 'Please enter your current body weight and donation history below.',
-        color: 'slate',
-      };
-    }
-
-    if (hasWeight && numW < 50) {
-      return {
-        status: 'underweight',
-        isEligible: false,
-        badge: 'Below 50 kg Criteria',
-        title: 'Non-Eligible (< 50 kg)',
-        donationActive: false,
-        donationStatusText: 'Status: INACTIVE',
-        desc: `Entered weight is ${numW} kg. Medical standards require a minimum body weight of 50 kg to donate blood.`,
-        color: 'rose',
-      };
-    }
+    let dateCheck = null;
 
     if (!neverDonated && lastDonated) {
       const last = new Date(lastDonated);
       const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      last.setHours(0, 0, 0, 0);
+
       if (last > today) {
-        return {
-          status: 'future_date',
-          isEligible: false,
+        dateCheck = {
+          isFuture: true,
           badge: 'Invalid Date',
-          title: 'Selected date is in the future',
-          donationActive: false,
-          donationStatusText: 'Status: INACTIVE',
-          desc: 'Please pick a past date when you previously donated blood.',
+          title: 'Date is in the future',
+          desc: 'Please select a past date when you previously donated blood.',
+          isIntervalEligible: false,
           color: 'rose',
         };
-      }
+      } else {
+        const diffTime = today.getTime() - last.getTime();
+        const diffDays = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
 
-      const diffTime = Math.abs(today - last);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        // 3-Month Interval Rule (standard 90 days cooldown)
+        const isIntervalEligible = diffDays >= 90;
+        const daysLeft = Math.max(0, 90 - diffDays);
+        const progressPercent = Math.min(100, Math.round((diffDays / 90) * 100));
 
-      // 3 Months = 90 days interval rule
-      if (diffDays < 90) {
-        const daysLeft = 90 - diffDays;
         const eligibleDate = new Date(last.getTime() + 90 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
           month: 'short',
           day: 'numeric',
           year: 'numeric',
         });
-        return {
-          status: 'cooldown',
-          isEligible: false,
-          diffDays,
-          daysLeft,
-          eligibleDate,
-          badge: `3-Month Cooldown (${daysLeft} Days Left)`,
-          title: 'Non-Eligible (Within 3 Months)',
-          donationActive: false,
-          donationStatusText: 'Status: INACTIVE',
-          desc: `Donated ${diffDays} days ago. A 3-month gap is required. You will become eligible on ${eligibleDate}.`,
-          color: 'amber',
-        };
-      } else {
-        const monthsAgo = Math.floor(diffDays / 30);
-        const weightOk = hasWeight ? numW >= 50 : false;
-        return {
-          status: 'eligible',
-          isEligible: weightOk,
+
+        const monthsAgo = (diffDays / 30.44).toFixed(1);
+
+        dateCheck = {
+          isFuture: false,
           diffDays,
           monthsAgo,
-          badge: '✓ 3+ Months Interval Passed',
-          title: weightOk ? 'Eligible to Donate Blood' : '3-Month Gap Verified',
-          donationActive: weightOk,
-          donationStatusText: weightOk ? 'Status: ACTIVE' : 'Status: INACTIVE',
-          desc: `Last donated ${diffDays} days (~${monthsAgo} months) ago. You meet the 3-month medical requirement!`,
-          color: weightOk ? 'emerald' : 'rose',
+          isIntervalEligible,
+          daysLeft,
+          progressPercent,
+          eligibleDate,
         };
       }
     }
 
-    if (neverDonated) {
-      const weightOk = hasWeight ? numW >= 50 : false;
+    // Determine overall eligibility:
+    // User must satisfy weight (>= 50kg) AND (first-time donor OR date >= 3 months ago)
+    const isIntervalOk = neverDonated ? true : Boolean(dateCheck?.isIntervalEligible);
+    const isDatePicked = neverDonated || Boolean(lastDonated);
+
+    if (!hasWeight && !isDatePicked) {
       return {
-        status: 'first_time',
-        isEligible: weightOk,
-        badge: '✨ First-Time Hero',
-        title: weightOk ? 'Eligible to Donate Blood' : 'First-Time Donor',
-        donationActive: weightOk,
-        donationStatusText: weightOk ? 'Status: ACTIVE' : 'Status: INACTIVE',
-        desc: weightOk
-          ? 'No cooldown required! With weight ≥ 50 kg, your blood donation status will be marked ACTIVE upon submit.'
-          : 'First-time donors with weight ≥ 50 kg become immediately active.',
-        color: weightOk ? 'emerald' : 'slate',
+        status: 'initial',
+        isEligible: false,
+        donationActive: false,
+        badge: 'Pending Health Data',
+        title: 'Enter Weight & Donation History',
+        donationStatusText: 'Status: INACTIVE',
+        desc: 'Please enter your weight (min 50 kg) and donation date to determine your active status.',
+        color: 'slate',
+        dateCheck,
+        isWeightEligible,
+        hasWeight,
       };
     }
 
+    // If future date
+    if (dateCheck?.isFuture) {
+      return {
+        status: 'invalid_date',
+        isEligible: false,
+        donationActive: false,
+        badge: 'Invalid Date Selected',
+        title: 'Last donation date is in the future',
+        donationStatusText: 'Status: INACTIVE',
+        desc: 'Please pick a past date when you previously donated.',
+        color: 'rose',
+        dateCheck,
+        isWeightEligible,
+        hasWeight,
+      };
+    }
+
+    // Both conditions satisfied: ELIGIBLE & ACTIVE
+    if (hasWeight && isWeightEligible && isIntervalOk) {
+      const desc = neverDonated
+        ? 'First-time donor with verified weight ≥ 50 kg. You are immediately eligible to donate blood!'
+        : `Last donated ${dateCheck?.diffDays} days (${dateCheck?.monthsAgo} months) ago. 3-month gap satisfied!`;
+
+      return {
+        status: 'eligible',
+        isEligible: true,
+        donationActive: true,
+        badge: '✓ 3+ Months Gap & Weight OK',
+        title: 'Eligible for Blood Donation',
+        donationStatusText: 'Status: ACTIVE',
+        desc,
+        color: 'emerald',
+        dateCheck,
+        isWeightEligible,
+        hasWeight,
+      };
+    }
+
+    // Opposite conditions: INELIGIBLE & INACTIVE
+    let oppositeReason = '';
+    let oppositeTitle = 'Non-Eligible for Donation';
+    let oppositeBadge = 'Non-Eligible';
+    let oppositeColor = 'amber';
+
+    if (hasWeight && !isWeightEligible && !isIntervalOk && !neverDonated) {
+      // Both weight and date fail
+      oppositeTitle = 'Non-Eligible (Weight & 3-Month Gap)';
+      oppositeBadge = 'Underweight & Cooldown';
+      oppositeReason = `Weight is under 50 kg and last donation was ${dateCheck?.diffDays} days ago (${dateCheck?.daysLeft} days remaining).`;
+      oppositeColor = 'rose';
+    } else if (hasWeight && !isWeightEligible) {
+      // Weight fails (< 50 kg)
+      oppositeTitle = 'Non-Eligible (Weight < 50 kg)';
+      oppositeBadge = 'Below 50 kg Limit';
+      oppositeReason = `Weight is ${numW} kg. Blood donors must weigh at least 50 kg for safety.`;
+      oppositeColor = 'rose';
+    } else if (!isIntervalOk && !neverDonated) {
+      // Date fails (within 3 months cooldown)
+      oppositeTitle = 'Non-Eligible (Within 3 Months)';
+      oppositeBadge = `3-Month Cooldown (${dateCheck?.daysLeft} Days Left)`;
+      oppositeReason = `Donated on ${new Date(lastDonated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} (${dateCheck?.diffDays} days ago). 3 months gap required. Eligible on ${dateCheck?.eligibleDate}.`;
+      oppositeColor = 'amber';
+    } else {
+      // Incomplete data
+      oppositeTitle = 'Incomplete Health Info';
+      oppositeBadge = 'Information Required';
+      oppositeReason = !hasWeight ? 'Please enter your weight.' : 'Please select donation history.';
+      oppositeColor = 'slate';
+    }
+
     return {
-      status: 'pending_date',
+      status: 'ineligible',
       isEligible: false,
-      badge: 'Select Donation History',
-      title: 'Choose date or First-Time',
       donationActive: false,
+      badge: oppositeBadge,
+      title: oppositeTitle,
       donationStatusText: 'Status: INACTIVE',
-      desc: 'Select your last donation date or choose First-Time Donor.',
-      color: 'slate',
+      desc: oppositeReason,
+      color: oppositeColor,
+      dateCheck,
+      isWeightEligible,
+      hasWeight,
     };
   }, [weight, lastDonated, neverDonated]);
 
@@ -582,31 +623,31 @@ export default function DonorDashboard() {
       <AnimatePresence>
         {showPopup && (
           <div 
-            className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-3.5 sm:p-4 z-50 select-none overflow-y-auto"
+            className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 z-50 select-none overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: 16 }}
+              initial={{ opacity: 0, scale: 0.94, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: 16 }}
-              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-              className="bg-white/95 backdrop-blur-xl rounded-3xl w-full max-w-md p-5 sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] relative text-left border border-slate-100 overflow-hidden my-auto"
+              exit={{ opacity: 0, scale: 0.94, y: 20 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-white rounded-3xl w-full max-w-md p-5 sm:p-6 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.35)] relative text-left border border-slate-100 overflow-hidden my-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Dynamic Accent Top Strip */}
               <div 
                 className={`absolute top-0 inset-x-0 h-1.5 transition-colors duration-500 ${
                   previewState.color === 'emerald'
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                    ? 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500'
                     : previewState.color === 'amber'
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-400'
+                    ? 'bg-gradient-to-r from-amber-500 via-orange-400 to-amber-500'
                     : previewState.color === 'rose'
-                    ? 'bg-gradient-to-r from-rose-500 to-red-400'
-                    : 'bg-gradient-to-r from-red-600 to-rose-500'
+                    ? 'bg-gradient-to-r from-rose-500 via-red-500 to-rose-600'
+                    : 'bg-gradient-to-r from-slate-400 to-slate-600'
                 }`} 
               />
 
-              {/* Header */}
+              {/* Minimal Creative Header */}
               <div className="flex items-start gap-3.5 pt-1">
                 <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border transition-all duration-300 ${
                   previewState.color === 'emerald'
@@ -615,7 +656,7 @@ export default function DonorDashboard() {
                     ? 'bg-amber-50 border-amber-200 text-amber-600 shadow-sm shadow-amber-500/20'
                     : previewState.color === 'rose'
                     ? 'bg-rose-50 border-rose-200 text-rose-600 shadow-sm shadow-rose-500/20'
-                    : 'bg-red-50 border-red-200 text-red-600 shadow-sm shadow-red-500/20'
+                    : 'bg-slate-100 border-slate-200 text-slate-700'
                 }`}>
                   {previewState.color === 'emerald' ? (
                     <CheckCircle2 className="w-5 h-5" />
@@ -624,14 +665,14 @@ export default function DonorDashboard() {
                   ) : previewState.color === 'rose' ? (
                     <AlertTriangle className="w-5 h-5" />
                   ) : (
-                    <Heart className="w-5 h-5 fill-red-600/15" />
+                    <Heart className="w-5 h-5 fill-red-600/20 text-red-600" />
                   )}
                 </div>
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      Donor Verification
+                      Medical Registry
                     </span>
                     <span className="w-1 h-1 rounded-full bg-slate-300" />
                     <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider">
@@ -639,58 +680,101 @@ export default function DonorDashboard() {
                     </span>
                   </div>
                   <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-snug">
-                    Complete Health Profile
+                    Health & Donation Eligibility
                   </h3>
                   <p className="text-[11px] sm:text-xs text-slate-500 leading-relaxed mt-0.5">
-                    Submit weight and donation history to determine eligibility.
+                    Blood banks require weight ≥ 50 kg and 3-month gap between donations.
                   </p>
                 </div>
               </div>
 
-              {/* Dynamic Live Eligibility Status Card */}
-              <div className={`p-3.5 rounded-2xl border transition-all duration-300 space-y-1.5 ${
+              {/* Creative Live Status Card with Cooldown Visualizer */}
+              <div className={`mt-4 p-3.5 rounded-2xl border transition-all duration-300 space-y-2.5 ${
                 previewState.color === 'emerald'
-                  ? 'bg-emerald-50/80 border-emerald-200 text-emerald-950'
+                  ? 'bg-emerald-50/70 border-emerald-200/90 text-emerald-950'
                   : previewState.color === 'amber'
-                  ? 'bg-amber-50/80 border-amber-200 text-amber-950'
+                  ? 'bg-amber-50/70 border-amber-200/90 text-amber-950'
                   : previewState.color === 'rose'
-                  ? 'bg-rose-50/80 border-rose-200 text-rose-950'
-                  : 'bg-slate-50 border-slate-200/80 text-slate-800'
+                  ? 'bg-rose-50/70 border-rose-200/90 text-rose-950'
+                  : 'bg-slate-50 border-slate-200 text-slate-800'
               }`}>
+                {/* Status Badges Row */}
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider shadow-2xs ${
                     previewState.color === 'emerald'
-                      ? 'bg-emerald-600 text-white shadow-2xs'
+                      ? 'bg-emerald-600 text-white'
                       : previewState.color === 'amber'
-                      ? 'bg-amber-500 text-white shadow-2xs'
+                      ? 'bg-amber-500 text-white'
                       : previewState.color === 'rose'
-                      ? 'bg-rose-600 text-white shadow-2xs'
-                      : 'bg-slate-200 text-slate-700'
+                      ? 'bg-rose-600 text-white'
+                      : 'bg-slate-300 text-slate-800'
                   }`}>
-                    {previewState.badge}
+                    {previewState.isEligible ? (
+                      <CheckCircle2 className="w-3 h-3" />
+                    ) : (
+                      <Clock className="w-3 h-3" />
+                    )}
+                    <span>{previewState.isEligible ? 'Eligible Donor' : 'Non-Eligible'}</span>
                   </span>
 
                   <span className={`text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 ${
                     previewState.donationActive ? 'text-emerald-700' : 'text-slate-500'
                   }`}>
-                    <span className={`w-2 h-2 rounded-full ${previewState.donationActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
-                    <span>{previewState.donationStatusText}</span>
+                    <span className={`w-2 h-2 rounded-full ${
+                      previewState.donationActive 
+                        ? 'bg-emerald-500 animate-pulse ring-4 ring-emerald-400/20' 
+                        : 'bg-slate-400'
+                    }`} />
+                    <span>{previewState.donationActive ? 'Donation: ACTIVE' : 'Donation: INACTIVE'}</span>
                   </span>
                 </div>
 
-                <p className="text-xs font-bold leading-snug">{previewState.title}</p>
-                <p className="text-[11px] opacity-80 leading-relaxed">{previewState.desc}</p>
+                {/* Dual Criteria Mini Badges */}
+                <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+                  <div className="px-2.5 py-1.5 rounded-xl bg-white/80 border border-slate-200/60 flex items-center justify-between text-[10px] font-bold">
+                    <span className="text-slate-500">3-Month Gap:</span>
+                    <span className={neverDonated || previewState.dateCheck?.isIntervalEligible ? 'text-emerald-600' : previewState.dateCheck ? 'text-amber-600' : 'text-slate-400'}>
+                      {neverDonated ? 'First-Time ✨' : previewState.dateCheck?.isIntervalEligible ? 'Passed (3+ Mo)' : previewState.dateCheck ? `${previewState.dateCheck.daysLeft}d left` : 'Pending'}
+                    </span>
+                  </div>
+                  <div className="px-2.5 py-1.5 rounded-xl bg-white/80 border border-slate-200/60 flex items-center justify-between text-[10px] font-bold">
+                    <span className="text-slate-500">Weight Metric:</span>
+                    <span className={previewState.isWeightEligible ? 'text-emerald-600' : previewState.hasWeight ? 'text-rose-600' : 'text-slate-400'}>
+                      {previewState.isWeightEligible ? '≥ 50 kg (OK)' : previewState.hasWeight ? '< 50 kg (Low)' : 'Min 50 kg'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Cooldown Progress Bar (Visible when within 3 months cooldown) */}
+                {previewState.dateCheck && !previewState.dateCheck.isIntervalEligible && !previewState.dateCheck.isFuture && !neverDonated && (
+                  <div className="space-y-1 pt-1">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-amber-800">
+                      <span>Cooldown: {previewState.dateCheck.diffDays} of 90 days</span>
+                      <span>Next Eligible: {previewState.dateCheck.eligibleDate}</span>
+                    </div>
+                    <div className="w-full h-2 bg-amber-200/60 rounded-full overflow-hidden p-0.5 border border-amber-300/40">
+                      <div 
+                        className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500"
+                        style={{ width: `${previewState.dateCheck.progressPercent}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-[11px] opacity-85 leading-relaxed pt-0.5">
+                  {previewState.desc}
+                </p>
               </div>
 
               {/* Error Alert if any */}
               {formError && (
-                <div className="p-3 bg-red-50 rounded-xl border border-red-200 text-xs text-red-700 flex items-center gap-2">
+                <div className="mt-3 p-3 bg-red-50 rounded-xl border border-red-200 text-xs text-red-700 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
                   <span>{formError}</span>
                 </div>
               )}
 
-              <form onSubmit={handleSaveHealthInfo} className="space-y-4 pt-1">
+              <form onSubmit={handleSaveHealthInfo} className="space-y-4 pt-3">
 
                 {/* Creative Pill Switcher: Donated Before vs First-Time */}
                 <div>
@@ -768,7 +852,7 @@ export default function DonorDashboard() {
                         setWeight(e.target.value);
                         if (formError) setFormError('');
                       }}
-                      placeholder="Enter weight in kg"
+                      placeholder="Enter weight in kg (e.g. 62)"
                       className="w-full pl-3.5 pr-12 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-900 transition"
                     />
                     <span className="absolute right-3.5 text-[11px] font-black text-slate-400 pointer-events-none">
@@ -801,7 +885,7 @@ export default function DonorDashboard() {
 
                 {/* Last Donated Date Input (Conditional on "Donated Before") */}
                 {!neverDonated && (
-                  <div className="space-y-1.5 animate-fadeIn">
+                  <div className="space-y-1.5">
                     <div className="flex items-center justify-between mb-1">
                       <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                         <Calendar className="w-3.5 h-3.5 text-red-600" />
@@ -822,8 +906,38 @@ export default function DonorDashboard() {
                       }}
                       className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-slate-900 cursor-pointer transition"
                     />
-                    <p className="text-[10px] text-slate-400 leading-tight">
-                      Donating blood <strong>3+ months (90+ days) ago</strong> qualifies you as <strong>ACTIVE</strong>. Donating within 3 months marks status as <strong>INACTIVE</strong>.
+
+                    {/* Quick Date Shortcuts for Frictionless Selection */}
+                    <div className="flex items-center gap-1.5 pt-0.5">
+                      <span className="text-[10px] text-slate-400 font-semibold shrink-0">Quick Pick:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const d = new Date();
+                          d.setDate(d.getDate() - 95); // 95 days ago (Eligible 3+ months)
+                          setLastDonated(d.toISOString().split('T')[0]);
+                          if (formError) setFormError('');
+                        }}
+                        className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 transition cursor-pointer"
+                      >
+                        ✓ 3+ Months Ago (Eligible)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const d = new Date();
+                          d.setDate(d.getDate() - 30); // 30 days ago (Within 3 months)
+                          setLastDonated(d.toISOString().split('T')[0]);
+                          if (formError) setFormError('');
+                        }}
+                        className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 transition cursor-pointer"
+                      >
+                        ⏳ 1 Month Ago (Cooldown)
+                      </button>
+                    </div>
+
+                    <p className="text-[10px] text-slate-400 leading-tight pt-0.5">
+                      Donating blood <strong>3+ months (90+ days) ago</strong> makes status <strong>ACTIVE</strong>. Donating within 3 months marks status <strong>INACTIVE & NON-ELIGIBLE</strong>.
                     </p>
                   </div>
                 )}
@@ -835,7 +949,7 @@ export default function DonorDashboard() {
                     disabled={isSaving}
                     className={`w-full py-3.5 text-xs font-black uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 active:scale-[0.99] shadow-md ${
                       previewState.donationActive
-                        ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white shadow-red-600/30'
+                        ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-emerald-600/30'
                         : 'bg-slate-900 hover:bg-slate-950 text-white shadow-slate-900/20'
                     }`}
                   >
@@ -847,19 +961,19 @@ export default function DonorDashboard() {
                     ) : previewState.donationActive ? (
                       <>
                         <CheckCircle2 className="w-4 h-4 text-white" />
-                        <span>Submit & Activate Blood Donation</span>
+                        <span>Submit & Activate Blood Donation (ACTIVE)</span>
                       </>
                     ) : (
                       <>
                         <ShieldAlert className="w-4 h-4 text-amber-400" />
-                        <span>Submit Health Log (Status Stays Inactive)</span>
+                        <span>Submit Health Info (Status: INACTIVE)</span>
                       </>
                     )}
                   </button>
 
                   <p className="text-[10px] text-slate-400 text-center mt-2.5 flex items-center justify-center gap-1">
                     <span>🔒</span>
-                    <span>Medical data encrypted. Cannot be skipped without completion.</span>
+                    <span>Mandatory medical verification. Cannot be skipped without completion.</span>
                   </p>
                 </div>
 

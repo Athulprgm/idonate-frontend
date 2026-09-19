@@ -964,9 +964,9 @@ export default function BlockCommitteeManagement() {
                           )}
                         </div>
                         <div className="flex flex-col gap-0.5 mt-0.5">
-                          <span className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-zinc-400 break-words">
+                          <span className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-zinc-400">
                             <Phone className="w-3 h-3 shrink-0" />
-                            <span className="font-semibold text-slate-700 dark:text-zinc-300 break-all">{parsed.admin1Name}</span>
+                            <span className="font-semibold text-slate-700 dark:text-zinc-300">{parsed.admin1Name}</span>
                             {parsed.admin1Mobile !== '—' && parsed.admin1Mobile !== 'N/A' && (
                               <span className="text-slate-400">· {parsed.admin1Mobile}</span>
                             )}
@@ -989,8 +989,8 @@ export default function BlockCommitteeManagement() {
                         </div>
                       </div>
 
-                      {/* Action buttons */}
-                      <div className="flex items-center gap-1.5 shrink-0 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                      {/* Action buttons - always visible on mobile, hover-only on desktop */}
+                      <div className="flex items-center gap-1.5 shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         {isAssigned && (c.rawAdmin || c.id) ? (
                           <>
                             {c.status === 'Active' ? (

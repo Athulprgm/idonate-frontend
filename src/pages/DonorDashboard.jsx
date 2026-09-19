@@ -6,7 +6,8 @@ import api from '../store/api.js';
 import {
   Loader2, X, Phone, RefreshCw,
   Heart, Siren, Droplet, Send, ShieldAlert, ShieldCheck,
-  Share2, MapPin, Headphones, MessageSquare
+  Share2, MapPin, Headphones, MessageSquare,
+  Scale, Calendar, AlertCircle, CheckCircle2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Modal from '../components/Modal.jsx';
@@ -20,11 +21,23 @@ export default function DonorDashboard() {
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Health popup
+  // Health popup (mandatory for donors who haven't entered weight)
+  const isHealthLogMissing = Boolean(user && (!user.weight || Number(user.weight) <= 0));
   const [showPopup, setShowPopup] = useState(false);
-  const [weight, setWeight] = useState('');
-  const [lastDonated, setLastDonated] = useState('');
+  const [weight, setWeight] = useState(user?.weight || '');
+  const [lastDonated, setLastDonated] = useState(user?.lastDonated || user?.last_donated_date || '');
+  const [neverDonated, setNeverDonated] = useState(!user?.lastDonated && !user?.last_donated_date);
+  const [formError, setFormError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  // Sync state if user data loads or updates
+  useEffect(() => {
+    if (user?.weight) setWeight(user.weight);
+    if (user?.lastDonated || user?.last_donated_date) {
+      setLastDonated(user.lastDonated || user.last_donated_date);
+      setNeverDonated(false);
+    }
+  }, [user]);
 
   // Technical Report Modal
   const [showReportModal, setShowReportModal] = useState(false);
@@ -51,39 +64,92 @@ export default function DonorDashboard() {
     fetchRequests();
     fetchNotifications();
 
-    if (user && !user.weight && !localStorage.getItem('hide_health_info_popup')) {
-      const timer = setTimeout(() => setShowPopup(true), 1000);
+    if (isHealthLogMissing) {
+      const timer = setTimeout(() => setShowPopup(true), 500);
       return () => clearTimeout(timer);
     }
-  }, [user, fetchRequests, fetchNotifications]);
+  }, [user, isHealthLogMissing, fetchRequests, fetchNotifications]);
 
   const handleSaveHealthInfo = async (e) => {
     e.preventDefault();
-    setIsSaving(true);
-    const payload = {};
-    if (weight) payload.weight = Number(weight);
-    if (lastDonated) {
-      payload.lastDonated = lastDonated;
-      payload.last_donated_date = lastDonated;
+    setFormError('');
+
+    const numWeight = Number(weight);
+    if (!weight || isNaN(numWeight) || numWeight <= 0) {
+      setFormError('Please enter a valid weight in kg.');
+      return;
+    }
+    if (numWeight < 35 || numWeight > 220) {
+      setFormError('Please enter a realistic weight (35 kg - 220 kg).');
+      return;
     }
 
-    if (Object.keys(payload).length > 0) {
-      const res = await updateProfile(payload);
-      if (res.success) {
-        triggerToast('Health info saved', 'success');
-      } else {
-        triggerToast('Failed to save health info', 'warning');
+    if (!neverDonated && !lastDonated) {
+      setFormError('Please select your last donation date or check "First-time donor".');
+      return;
+    }
+
+    if (!neverDonated && lastDonated) {
+      const selectedDate = new Date(lastDonated);
+      const today = new Date();
+      if (selectedDate > today) {
+        setFormError('Last donation date cannot be in the future.');
+        return;
       }
     }
 
-    localStorage.setItem('hide_health_info_popup', 'true');
-    setShowPopup(false);
-    setIsSaving(false);
-  };
+    setIsSaving(true);
 
-  const handleSkip = () => {
-    localStorage.setItem('hide_health_info_popup', 'true');
-    setShowPopup(false);
+    // Determine donation eligibility based on entered health data
+    let isEligible = false;
+    let reasonText = '';
+
+    if (numWeight < 50) {
+      isEligible = false;
+      reasonText = 'Minimum weight of 50 kg is required for donation. Your donation status is set to Inactive for safety.';
+    } else if (!neverDonated && lastDonated) {
+      const last = new Date(lastDonated);
+      const diffTime = Math.abs(new Date() - last);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays < 90) {
+        isEligible = false;
+        reasonText = `You are in a ${90 - diffDays} days donation cooldown period.`;
+      } else {
+        isEligible = true;
+      }
+    } else {
+      isEligible = true;
+    }
+
+    const payload = {
+      weight: numWeight,
+      last_donated_date: neverDonated ? null : lastDonated,
+      lastDonated: neverDonated ? null : lastDonated,
+      available_for_donation: isEligible,
+      availableForDonation: isEligible,
+    };
+
+    try {
+      const res = await updateProfile(payload);
+      if (res?.success) {
+        if (isEligible) {
+          await setAvailability(true);
+          triggerToast('Health log saved! You are now Active and Available to donate blood 🎉', 'success');
+        } else {
+          await setAvailability(false);
+          triggerToast(`Health log saved. ${reasonText}`, 'warning');
+        }
+        setShowPopup(false);
+      } else {
+        setFormError(res?.error || 'Failed to save health info. Please try again.');
+        triggerToast('Failed to save health info', 'error');
+      }
+    } catch {
+      setFormError('Network error. Please try again.');
+      triggerToast('Network error while saving', 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Technical Report Submit
@@ -111,6 +177,12 @@ export default function DonorDashboard() {
   };
 
   const toggleAvailability = async () => {
+    if (isHealthLogMissing) {
+      triggerToast('Please complete your health log (weight & last donation date) to activate donation', 'warning');
+      setShowPopup(true);
+      return;
+    }
+
     const next = !user?.availableForDonation;
     if (next && user?.eligibilityStatus === 'Ineligible') {
       setShowIneligibleModal(true);
@@ -128,6 +200,9 @@ export default function DonorDashboard() {
 
   // Eligibility calculation
   const getEligibility = () => {
+    if (isHealthLogMissing) {
+      return { eligible: false, text: 'Health Log Incomplete' };
+    }
     if (user?.eligibilityStatus === 'Ineligible') {
       return { eligible: false, text: 'Ineligible (Health Deferral)' };
     }

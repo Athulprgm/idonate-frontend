@@ -120,7 +120,7 @@ export default function Login() {
               <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
                 <p className="font-bold text-slate-900 mb-1">Technical Partner: Trawbit Technologies</p>
                 <p className="text-slate-700 font-bold mb-1">+91 94972 19574</p>
-                <p className="text-slate-700 font-bold mb-1">support@trawbit</p>
+                <p className="text-slate-700 font-bold mb-1">support@trawbit.com</p>
                 <p className="text-xs text-slate-500 font-medium mt-2">For bug reports, technical issues, and system integrations.</p>
               </div>
             </div>
@@ -137,7 +137,7 @@ export default function Login() {
       {/* ── Back to Landing Page Button ── */}
       <Link 
         to="/" 
-        className="absolute top-6 left-6 z-50 flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-md rounded-full text-white text-xs font-bold tracking-widest uppercase transition-all duration-300 hover:-translate-x-1"
+        className="absolute top-6 left-6 z-50 flex items-center gap-2 px-4 py-2 bg-slate-900/70 hover:bg-slate-900/90 border border-white/10 backdrop-blur-md rounded-full text-white text-xs font-bold tracking-widest uppercase transition-all duration-300 hover:-translate-x-1 shadow-lg"
       >
         <ArrowLeft className="w-4 h-4" />
         Back
@@ -212,11 +212,15 @@ export default function Login() {
 
           <div className="grid grid-cols-2 gap-4 sm:gap-6 border-t border-white/15 pt-5 sm:pt-8">
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-white mb-1">{publicStats?.totalVolunteers || '-'}</div>
-              <div className="text-[10px] font-bold tracking-widest text-white/50 uppercase">Active Meghalas</div>
+              <div className="text-2xl sm:text-3xl font-black text-white mb-1">
+                {publicStats?.totalVolunteers ? `${Number(publicStats.totalVolunteers).toLocaleString()}+` : '—'}
+              </div>
+              <div className="text-[10px] font-bold tracking-widest text-white/50 uppercase">Meghala Units</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-white mb-1">{publicStats?.totalRequests || '-'}</div>
+              <div className="text-2xl sm:text-3xl font-black text-white mb-1">
+                {publicStats?.totalRequests ? `${Number(publicStats.totalRequests).toLocaleString()}+` : '—'}
+              </div>
               <div className="text-[10px] font-bold tracking-widest text-white/50 uppercase">Blood Requests</div>
             </div>
           </div>
@@ -241,7 +245,7 @@ export default function Login() {
             <p className="text-slate-500 text-sm font-medium">Please securely log in to your portal.</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
+          <form onSubmit={handleSubmit} className="space-y-6" autoComplete="on">
 
             {/* Modern Outline Input - Email */}
             <div className="space-y-1.5">
@@ -256,7 +260,7 @@ export default function Login() {
                   type="text"
                   value={credential}
                   onChange={(e) => setCredential(e.target.value)}
-                  autoComplete="off"
+                  autoComplete="username"
                   className="w-full bg-white border-2 border-slate-200 hover:border-slate-300 focus:border-red-500 rounded-2xl transition-all duration-300 py-4 pl-12 pr-4 text-slate-900 font-medium text-sm outline-none shadow-sm"
                   placeholder="you@idonate.org"
                 />
@@ -281,7 +285,7 @@ export default function Login() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="new-password"
+                  autoComplete="current-password"
                   className="w-full bg-white border-2 border-slate-200 hover:border-slate-300 focus:border-red-500 rounded-2xl transition-all duration-300 py-4 pl-12 pr-12 text-slate-900 font-medium text-sm outline-none tracking-widest shadow-sm"
                   placeholder="••••••••"
                 />

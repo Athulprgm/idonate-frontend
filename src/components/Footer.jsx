@@ -124,7 +124,7 @@ export default function Footer() {
           </div>
 
           {/* Links Columns */}
-          <div className="md:col-span-2 md:col-start-6 space-y-6">
+          <div className="md:col-span-2 md:col-start-5 space-y-6">
             <h4 className="text-sm font-bold text-slate-900">
               Platform
             </h4>

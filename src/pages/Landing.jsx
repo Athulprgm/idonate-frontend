@@ -378,7 +378,7 @@ export default function Landing() {
               },
               {
                 val: displayVolunteerCount > 0 ? `${displayVolunteerCount.toLocaleString()}+` : (totalVolunteers > 0 ? `${totalVolunteers}+` : '0'),
-                label: 'Total Meghalas',
+                label: 'Meghala Units',
                 highlight: true,
               },
               { val: 'Kasaragod', label: 'Donor Reach' },
@@ -493,7 +493,7 @@ export default function Landing() {
                 return (
                   <div
                     key={req.id || req._id}
-                    className="p-6 rounded-2xl bg-white border-slate-200 shadow-sm border hover:border-red-300 hover: transition-all flex flex-col justify-between space-y-4"
+                    className="p-6 rounded-2xl bg-white border-slate-200 shadow-sm border hover:border-red-300 transition-all flex flex-col justify-between space-y-4"
                   >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
@@ -566,7 +566,7 @@ export default function Landing() {
               return (
                 <div
                   key={step.num}
-                  className="p-6 rounded-2xl bg-white border-slate-200 shadow-sm border /80 hover:border-red-300 hover: transition-all space-y-4 group"
+                  className="p-6 rounded-2xl bg-white border-slate-200 shadow-sm border hover:border-red-300 transition-all space-y-4 group"
                 >
                   <div className="flex items-center justify-between">
                     <div className="w-12 h-12 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-red-600 group-hover:scale-110 transition-transform">

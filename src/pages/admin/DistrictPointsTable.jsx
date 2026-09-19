@@ -988,7 +988,7 @@ export default function DistrictPointsTable() {
 
                   {/* Desktop Table View (>= md) */}
                   <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full text-left text-xs border-collapse">
+                    <table className="w-full min-w-[800px] text-left text-xs border-collapse">
                       <thead>
                         <tr className="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                           <th className="py-3.5 px-4 w-12 text-center">Rank</th>

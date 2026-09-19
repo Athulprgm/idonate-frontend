@@ -323,7 +323,7 @@ export default function VolunteerManagement() {
                 <p className="text-slate-400 text-xs mt-1">Try adjusting your search terms or filters.</p>
               </div>
             ) : (
-              <table className="w-full text-left border-collapse">
+              <table className="w-full min-w-[850px] text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                     <th className="py-4 px-6">JL Employee ID</th>

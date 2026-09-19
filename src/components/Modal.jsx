@@ -12,7 +12,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -25,22 +25,22 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className={`relative w-full ${sizes[size]} bg-white rounded-3xl shadow-2xl overflow-hidden`}
+            className={`relative w-full ${sizes[size]} bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90dvh]`}
           >
             {/* Header */}
             {title && (
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                <h3 className="text-base font-bold text-gray-900">{title}</h3>
+              <div className="flex items-center justify-between px-4 py-3.5 sm:px-6 sm:py-4 border-b border-slate-100 shrink-0">
+                <h3 className="text-sm sm:text-base font-bold text-gray-900 truncate pr-2">{title}</h3>
                 <button
                   onClick={onClose}
-                  className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                  className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shrink-0 cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
             )}
             {/* Content */}
-            <div className="px-6 py-5">{children}</div>
+            <div className="px-4 py-4 sm:px-6 sm:py-5 overflow-y-auto flex-1 overscroll-contain">{children}</div>
           </motion.div>
         </div>
       )}

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore } from '../store/appStore.js';
 import DonorCard from '../components/DonorCard.jsx';
 import Modal from '../components/Modal.jsx';
@@ -247,7 +247,7 @@ export default function DonorSearch() {
             Understanding who can donate to whom is critical for matching emergency requests. Below are red blood cell compatibility guidelines:
           </p>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs">
+            <table className="w-full min-w-[420px] text-xs">
               <thead className="bg-slate-50 border-b border-slate-100">
                 <tr>
                   <th className="p-2.5 font-bold text-gray-600">Blood Type</th>

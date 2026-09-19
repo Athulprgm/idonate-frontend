@@ -34,9 +34,9 @@ export default function FilterBar({
     dateFrom || dateTo;
 
   return (
-    <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-white/[0.06] bg-white/[0.01]">
+    <div className="flex flex-wrap items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 border-b border-white/[0.06] bg-white/[0.01]">
       {/* Search */}
-      <div className="relative flex-1 min-w-[180px] max-w-xs">
+      <div className="relative w-full sm:w-auto sm:flex-1 sm:max-w-xs sm:min-w-[180px]">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 pointer-events-none" />
         <input
           value={search}
@@ -52,7 +52,7 @@ export default function FilterBar({
           key={filter.key}
           value={filterValues[filter.key] || 'all'}
           onChange={e => onFilterChange?.(filter.key, e.target.value)}
-          className="py-2 pl-3 pr-7 bg-white/5 border border-white/[0.08] rounded-lg text-slate-300 text-xs focus:outline-none focus:border-red-500/40 transition-colors cursor-pointer appearance-none"
+          className="w-full sm:w-auto py-2 pl-3 pr-7 bg-white/5 border border-white/[0.08] rounded-lg text-slate-300 text-xs focus:outline-none focus:border-red-500/40 transition-colors cursor-pointer appearance-none"
           style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}
         >
           <option value="all">{filter.label}: All</option>

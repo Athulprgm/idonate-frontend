@@ -524,9 +524,9 @@ export default function Campaigns() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="bg-white border-slate-200 shadow-sm rounded-2xl shadow-2xl border border-red-100 w-full max-w-lg overflow-hidden"
+              className="bg-white border-slate-200 shadow-2xl rounded-2xl border border-red-100 w-full max-w-lg overflow-hidden flex flex-col max-h-[90dvh]"
             >
-              <div className="bg-red-600 px-6 py-4 text-white flex items-center justify-between">
+              <div className="bg-red-600 px-6 py-4 text-white flex items-center justify-between shrink-0">
                 <h3 className="text-base font-extrabold text-white">
                   {editingPostId ? 'Edit Campaign Program' : 'Publish New Campaign'}
                 </h3>
@@ -535,7 +535,7 @@ export default function Campaigns() {
                 </button>
               </div>
 
-              <form onSubmit={handleFormSubmit} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto text-xs">
+              <form onSubmit={handleFormSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 text-xs">
                 <div>
                   <label className="block font-extrabold text-slate-700 mb-1">Program Title *</label>
                   <input
@@ -550,7 +550,7 @@ export default function Campaigns() {
 
                 <div>
                   <label className="block font-extrabold text-slate-700 mb-1">Category *</label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-1.5 sm:gap-2 text-[11px] sm:text-xs">
                     {[
                       { id: 'blood_donation', label: 'Blood Camp' },
                       { id: 'health_checkup', label: 'Health Checkup' },
@@ -601,7 +601,7 @@ export default function Campaigns() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block font-extrabold text-slate-700 mb-1">Venue / Location</label>
                     <input
@@ -624,7 +624,7 @@ export default function Campaigns() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block font-extrabold text-slate-700 mb-1">Event Date</label>
                     <input

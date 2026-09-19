@@ -1052,124 +1052,200 @@ export default function SuperAdminDashboard() {
             No Block Committees found.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 font-extrabold uppercase tracking-wider text-[10px]">
-                  <th className="py-3 px-4">JL Employee ID</th>
-                  <th className="py-3 px-4">Block Committee</th>
-                  <th className="py-3 px-4">Meghala Committees</th>
-                  <th className="py-3 px-4">Primary Contact</th>
-                  <th className="py-3 px-4">Secondary Contact</th>
-                  <th className="py-3 px-4">Email</th>
-                  <th className="py-3 px-4 text-center">Status</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredBlockAdmins.map((ba) => {
-                  const { admin1Name, admin1Mobile, admin2Name, admin2Mobile } = parseBlockAdminContacts(ba);
-                  const { count: mCount, list: mList } = getBlockMeghalaStats(ba);
+          <>
+            {/* Mobile Cards View */}
+            <div className="md:hidden divide-y divide-slate-100">
+              {filteredBlockAdmins.map((ba) => {
+                const { admin1Name, admin1Mobile, admin2Name, admin2Mobile } = parseBlockAdminContacts(ba);
+                const { count: mCount } = getBlockMeghalaStats(ba);
+                const bId = getDisplayJeevalinkId(ba);
 
-                  return (
-                    <tr key={ba.id} className="hover:bg-red-50/20 transition-colors">
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        {(() => {
-                          const bId = getDisplayJeevalinkId(ba);
-                          return bId ? (
-                            <span className="inline-flex items-center gap-1 font-mono text-[10px] font-black text-primary bg-red-50 border border-red-100 px-2 py-0.5 rounded-lg">
-                              {bId}
-                            </span>
-                          ) : (
-                            <span className="text-slate-300 text-[10px] italic">—</span>
-                          );
-                        })()}
-                      </td>
-                      <td className="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">
-                        {ba.blockCommitteeName || ba.city || ba.block || 'N/A'}
-                      </td>
-
-                      {/* Meghala Committees Column (Strictly real registered count, zero dummy data) */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        {mCount > 0 ? (
-                          <div>
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-200">
-                              <MapPin className="w-3 h-3 text-violet-500" />
-                              {mCount} Meghala{mCount !== 1 ? 's' : ''}
-                            </span>
-                            {mList && mList.length > 0 && (
-                              <div className="text-[10px] text-slate-400 max-w-[170px] truncate mt-0.5 font-medium" title={mList.join(', ')}>
-                                {mList.slice(0, 2).join(', ')}{mList.length > 2 ? ` +${mList.length - 2}` : ''}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-400 border border-slate-200/80">
-                            <MapPin className="w-3 h-3 text-slate-300" />
-                            0 Meghalas
+                return (
+                  <div key={ba.id} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="font-bold text-slate-900 text-sm">
+                          {ba.blockCommitteeName || ba.city || ba.block || 'N/A'}
+                        </div>
+                        {bId && (
+                          <span className="inline-flex items-center gap-1 font-mono text-[10px] font-black text-primary bg-red-50 border border-red-100 px-2 py-0.5 rounded-lg mt-1">
+                            {bId}
                           </span>
                         )}
-                      </td>
+                      </div>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
+                        ba.status === 'Active' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${ba.status === 'Active' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                        {ba.status || 'Active'}
+                      </span>
+                    </div>
 
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="font-bold text-slate-900">{admin1Name}</div>
-                        <div className="text-[10px] text-slate-500 flex items-center gap-1">
-                          <Phone className="w-2.5 h-2.5 text-slate-400" /> {admin1Mobile}
-                        </div>
-                      </td>
-
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        {admin2Name || admin2Mobile ? (
-                          <>
-                            <div className="font-bold text-slate-900">{admin2Name || 'Admin 2'}</div>
-                            {admin2Mobile && (
-                              <div className="text-[10px] text-slate-500 flex items-center gap-1">
-                                <Phone className="w-2.5 h-2.5 text-slate-400" /> {admin2Mobile}
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <span className="text-slate-400 italic">Not set</span>
+                    <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-semibold block">Primary Contact</span>
+                        <span className="font-bold text-slate-800 truncate block">{admin1Name}</span>
+                        {admin1Mobile && (
+                          <a href={`tel:${admin1Mobile}`} className="text-primary font-semibold text-[11px] flex items-center gap-1 mt-0.5">
+                            <Phone className="w-2.5 h-2.5" /> {admin1Mobile}
+                          </a>
                         )}
-                      </td>
-
-                      <td className="py-3 px-4 whitespace-nowrap font-mono text-slate-600">
-                        {ba.email}
-                      </td>
-
-                      <td className="py-3 px-4 text-center whitespace-nowrap">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${ba.status === 'Active' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'
-                          }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${ba.status === 'Active' ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                          {ba.status || 'Active'}
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-semibold block">Meghalas</span>
+                        <span className="font-bold text-violet-700 inline-flex items-center gap-1 mt-0.5 text-xs">
+                          <MapPin className="w-3 h-3 text-violet-500" /> {mCount} Meghala{mCount !== 1 ? 's' : ''}
                         </span>
-                      </td>
+                      </div>
+                    </div>
 
-                      <td className="py-3 px-4 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => handleOpenEdit(ba)}
-                            className="px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:text-red-600 bg-slate-50 border border-slate-200 rounded-lg transition cursor-pointer flex items-center gap-1"
-                          >
-                            <Edit3 className="w-3 h-3" /> Edit
-                          </button>
-                          <button
-                            onClick={() => {
-                              setDeletingAdminId(ba.id);
-                              setDeletingAdminName(ba.primary_name || ba.name);
-                            }}
-                            className="px-2.5 py-1 text-[11px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-lg transition cursor-pointer flex items-center gap-1"
-                          >
-                            <Trash2 className="w-3 h-3" /> Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                    <div className="flex items-center justify-between gap-2 pt-1">
+                      <span className="text-[11px] text-slate-500 font-mono truncate max-w-[170px]">
+                        {ba.email}
+                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          onClick={() => handleOpenEdit(ba)}
+                          className="px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:text-red-600 bg-slate-100 border border-slate-200 rounded-lg transition"
+                        >
+                          <Edit3 className="w-3 h-3 inline mr-1" /> Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            setDeletingAdminId(ba.id);
+                            setDeletingAdminName(ba.primary_name || ba.name);
+                          }}
+                          className="px-2.5 py-1 text-[11px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-lg transition"
+                        >
+                          <Trash2 className="w-3 h-3 inline mr-1" /> Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full min-w-[760px] text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 font-extrabold uppercase tracking-wider text-[10px]">
+                    <th className="py-3 px-4">JL Employee ID</th>
+                    <th className="py-3 px-4">Block Committee</th>
+                    <th className="py-3 px-4">Meghala Committees</th>
+                    <th className="py-3 px-4">Primary Contact</th>
+                    <th className="py-3 px-4">Secondary Contact</th>
+                    <th className="py-3 px-4">Email</th>
+                    <th className="py-3 px-4 text-center">Status</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredBlockAdmins.map((ba) => {
+                    const { admin1Name, admin1Mobile, admin2Name, admin2Mobile } = parseBlockAdminContacts(ba);
+                    const { count: mCount, list: mList } = getBlockMeghalaStats(ba);
+
+                    return (
+                      <tr key={ba.id} className="hover:bg-red-50/20 transition-colors">
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          {(() => {
+                            const bId = getDisplayJeevalinkId(ba);
+                            return bId ? (
+                              <span className="inline-flex items-center gap-1 font-mono text-[10px] font-black text-primary bg-red-50 border border-red-100 px-2 py-0.5 rounded-lg">
+                                {bId}
+                              </span>
+                            ) : (
+                              <span className="text-slate-300 text-[10px] italic">—</span>
+                            );
+                          })()}
+                        </td>
+                        <td className="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">
+                          {ba.blockCommitteeName || ba.city || ba.block || 'N/A'}
+                        </td>
+
+                        {/* Meghala Committees Column (Strictly real registered count, zero dummy data) */}
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          {mCount > 0 ? (
+                            <div>
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-200">
+                                <MapPin className="w-3 h-3 text-violet-500" />
+                                {mCount} Meghala{mCount !== 1 ? 's' : ''}
+                              </span>
+                              {mList && mList.length > 0 && (
+                                <div className="text-[10px] text-slate-400 max-w-[170px] truncate mt-0.5 font-medium" title={mList.join(', ')}>
+                                  {mList.slice(0, 2).join(', ')}{mList.length > 2 ? ` +${mList.length - 2}` : ''}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-400 border border-slate-200/80">
+                              <MapPin className="w-3 h-3 text-slate-300" />
+                              0 Meghalas
+                            </span>
+                          )}
+                        </td>
+
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <div className="font-bold text-slate-900">{admin1Name}</div>
+                          <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                            <Phone className="w-2.5 h-2.5 text-slate-400" /> {admin1Mobile}
+                          </div>
+                        </td>
+
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          {admin2Name || admin2Mobile ? (
+                            <>
+                              <div className="font-bold text-slate-900">{admin2Name || 'Admin 2'}</div>
+                              {admin2Mobile && (
+                                <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                                  <Phone className="w-2.5 h-2.5 text-slate-400" /> {admin2Mobile}
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-slate-400 italic">Not set</span>
+                          )}
+                        </td>
+
+                        <td className="py-3 px-4 whitespace-nowrap font-mono text-slate-600">
+                          {ba.email}
+                        </td>
+
+                        <td className="py-3 px-4 text-center whitespace-nowrap">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${ba.status === 'Active' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'
+                            }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${ba.status === 'Active' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                            {ba.status || 'Active'}
+                          </span>
+                        </td>
+
+                        <td className="py-3 px-4 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => handleOpenEdit(ba)}
+                              className="px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:text-red-600 bg-slate-50 border border-slate-200 rounded-lg transition cursor-pointer flex items-center gap-1"
+                            >
+                              <Edit3 className="w-3 h-3" /> Edit
+                            </button>
+                            <button
+                              onClick={() => {
+                                setDeletingAdminId(ba.id);
+                                setDeletingAdminName(ba.primary_name || ba.name);
+                              }}
+                              className="px-2.5 py-1 text-[11px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-lg transition cursor-pointer flex items-center gap-1"
+                            >
+                              <Trash2 className="w-3 h-3" /> Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 

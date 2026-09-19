@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore } from '../store/appStore.js';
 import { useAuthStore } from '../store/authStore.js';
 import {
@@ -505,7 +505,7 @@ export default function EmergencyDashboard() {
 
           {/* Table display */}
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full min-w-[700px] text-left text-xs">
               <thead>
                 <tr className="bg-slate-50 dark:bg-zinc-950/65 text-slate-400 dark:text-zinc-500 uppercase tracking-wider font-bold">
                   <th className="px-4 py-3 rounded-l-xl">Patient Name</th>

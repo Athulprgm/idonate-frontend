@@ -712,113 +712,112 @@ export default function UserManagement() {
         />
 
         {/* Minimal Modern Table */}
-        <div className="overflow-x-auto">
-          {filtered.length === 0 ? (
-            <div className="py-16 text-center">
-              <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 mx-auto mb-3">
-                <Users className="w-6 h-6" />
-              </div>
-              <p className="text-slate-700 font-bold text-sm">No Users Found</p>
-              <p className="text-slate-400 text-xs mt-1">Try adjusting your search terms or filters.</p>
+        {filtered.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 mx-auto mb-3">
+              <Users className="w-6 h-6" />
             </div>
-          ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  <th className="py-4 px-6">User & Profile</th>
-                  <th className="py-4 px-6">Blood Group</th>
-                  <th className="py-4 px-6">Mobile Contact</th>
-                  <th className="py-4 px-6">User Role</th>
-                  <th className="py-4 px-6">District / City</th>
-                  <th className="py-4 px-6 text-center">Status</th>
-                  <th className="py-4 px-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-xs">
-                {filtered.map((u) => {
-                  const displayName = u.primaryName || u.name || 'User';
-                  const pic = u.profilePicture || u.profile_picture;
+            <p className="text-slate-700 font-bold text-sm">No Users Found</p>
+            <p className="text-slate-400 text-xs mt-1">Try adjusting your search terms or filters.</p>
+          </div>
+        ) : (
+          <>
+            {/* Mobile Touch-Friendly Card List (md:hidden) */}
+            <div className="md:hidden divide-y divide-slate-100">
+              {filtered.map((u) => {
+                const displayName = u.primaryName || u.name || 'User';
+                const pic = u.profilePicture || u.profile_picture;
+                const isApproved = u.status === 'Active' || u.status === 'active';
+                const isPending = !isApproved && u.status !== 'Rejected' && u.status !== 'rejected';
+                const phone = u.mobile || u.phone || '';
 
-                  return (
-                    <motion.tr
-                      key={u._id || u.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="hover:bg-red-50/20 transition"
-                    >
-                      {/* Avatar & Name */}
-                      <td className="py-4 px-6 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={getStorageUrl(pic) || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName)}`}
-                            alt={displayName}
-                            onError={(e) => { e.target.onerror = null; e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName)}`; }}
-                            className="w-9 h-9 rounded-xl object-cover border border-slate-200 shadow-xs"
-                          />
-                          <div>
-                            <p className="text-slate-900 text-xs font-bold">{displayName}</p>
-                            <p className="text-slate-500 text-[11px] font-mono mt-0.5">{u.email}</p>
-                          </div>
+                return (
+                  <div key={u._id || u.id} className="p-4 space-y-3 bg-white hover:bg-slate-50/50 transition">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <img
+                          src={getStorageUrl(pic) || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName)}`}
+                          alt={displayName}
+                          onError={(e) => { e.target.onerror = null; e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName)}`; }}
+                          className="w-11 h-11 rounded-2xl object-cover border border-slate-200 shadow-xs shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <h4 className="text-slate-900 text-sm font-bold truncate">{displayName}</h4>
+                          <p className="text-slate-500 text-xs font-mono truncate">{u.email}</p>
+                          {u.jeevalink_id && (
+                            <span className="inline-block text-[9px] font-extrabold font-mono text-primary bg-red-50 border border-red-100 px-1.5 py-0.5 rounded mt-0.5">
+                              ID: {u.jeevalink_id}
+                            </span>
+                          )}
                         </div>
-                      </td>
+                      </div>
 
-                      {/* Creative Blood Group Pill */}
-                      <td className="py-4 px-6 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border border-red-200/80 shadow-2xs">
-                          <Droplet className="w-3.5 h-3.5 text-red-600 fill-red-600 animate-pulse" />
-                          {u.bloodGroup || u.blood_group || 'N/A'}
-                        </span>
-                      </td>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-black bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border border-red-200/80 shrink-0">
+                        <Droplet className="w-3 h-3 text-red-600 fill-red-600" />
+                        {u.bloodGroup || u.blood_group || 'N/A'}
+                      </span>
+                    </div>
 
-                      {/* Phone */}
-                      <td className="py-4 px-6 whitespace-nowrap">
-                        <div className="flex items-center gap-1 text-slate-700 font-mono font-medium">
-                          <Phone className="w-3 h-3 text-slate-400" />
-                          <span>{u.mobile || '—'}</span>
-                        </div>
-                      </td>
-
-                      {/* Role */}
-                      <td className="py-4 px-6 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 border border-blue-200 text-blue-700 uppercase tracking-wider">
-                          {u.role || 'User'}
-                        </span>
-                      </td>
-
-                      {/* Location */}
-                      <td className="py-4 px-6 whitespace-nowrap text-slate-600">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{u.city ? `${u.city}, ` : ''}{u.district || '—'}</span>
-                        </div>
-                      </td>
-
-                      {/* Status */}
-                      <td className="py-4 px-6 text-center whitespace-nowrap">
-                        <StatusBadge status={u.status || 'Active'} isVerified={u.is_verified || u.isVerified} />
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-4 px-6 text-right space-x-1.5 whitespace-nowrap">
-                        {/* Verify & Accept User Button (Only for Meghala Volunteer / Admin, NOT Unit Squad) */}
-                        {(currentUser?.role || '').toLowerCase() !== 'unit_squad' && (u.status !== 'Active' && u.status !== 'active') && (
-                          <button
-                            onClick={() => handleVerifyUser(u)}
-                            disabled={verifyingUserId === (u._id || u.id)}
-                            className="px-2.5 py-1.5 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl transition cursor-pointer inline-flex items-center gap-1 font-bold text-xs shadow-2xs"
-                            title="Verify & Accept User (Password sent directly to email)"
-                          >
-                            {verifyingUserId === (u._id || u.id) ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
-                            ) : (
-                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                            )}
-                            Verify & Accept
-                          </button>
+                    {/* Details Grid */}
+                    <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 bg-slate-50/80 p-2.5 rounded-xl border border-slate-100">
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Phone</span>
+                        {phone ? (
+                          <a href={`tel:${phone}`} className="font-mono font-bold text-red-600 hover:underline flex items-center gap-1">
+                            <Phone className="w-3 h-3 text-slate-400" />
+                            {phone}
+                          </a>
+                        ) : (
+                          <span className="text-slate-400 italic">Not set</span>
                         )}
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Location</span>
+                        <span className="truncate font-semibold text-slate-700 block">
+                          {u.city || u.district || 'Kasaragod'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Role</span>
+                        <span className="capitalize font-semibold text-slate-700 block">
+                          {(u.role || 'donor').replace('_', ' ')}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Status</span>
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                          isApproved
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                            : u.status === 'Rejected'
+                            ? 'bg-rose-50 border-rose-200 text-rose-700'
+                            : 'bg-amber-50 border-amber-200 text-amber-700'
+                        }`}>
+                          {u.status || 'Active'}
+                        </span>
+                      </div>
+                    </div>
 
-                        {/* Reject Button (Only for Meghala Volunteer / Admin, NOT Unit Squad) */}
-                        {(currentUser?.role || '').toLowerCase() !== 'unit_squad' && (u.status !== 'Active' && u.status !== 'active' && u.status !== 'Rejected' && u.status !== 'rejected') && (
+                    {/* Actions Row */}
+                    <div className="flex items-center gap-1.5 pt-1 overflow-x-auto no-scrollbar">
+                      {(currentUser?.role || '').toLowerCase() !== 'unit_squad' && isPending && (
+                        <>
+                          <button
+                            onClick={async () => {
+                              const userId = u._id || u.id;
+                              setApprovingUserId(userId);
+                              await volunteerApproveUser(userId);
+                              setApprovingUserId(null);
+                            }}
+                            disabled={approvingUserId === (u._id || u.id)}
+                            className="flex-1 py-2 px-2.5 text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition cursor-pointer flex items-center justify-center gap-1 font-bold text-xs shadow-xs disabled:opacity-50"
+                          >
+                            {approvingUserId === (u._id || u.id) ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Check className="w-3.5 h-3.5" />
+                            )}
+                            Approve
+                          </button>
                           <button
                             onClick={async () => {
                               const userId = u._id || u.id;
@@ -827,58 +826,221 @@ export default function UserManagement() {
                               setRejectingUserId(null);
                             }}
                             disabled={rejectingUserId === (u._id || u.id)}
-                            className="px-2.5 py-1.5 text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-300 rounded-xl transition cursor-pointer inline-flex items-center gap-1 font-bold text-xs shadow-2xs disabled:opacity-50"
-                            title="Reject User Registration"
+                            className="py-2 px-2.5 text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-300 rounded-xl transition cursor-pointer flex items-center justify-center gap-1 font-bold text-xs disabled:opacity-50"
                           >
                             {rejectingUserId === (u._id || u.id) ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-600" />
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
                             ) : (
-                              <X className="w-3.5 h-3.5 text-rose-600" />
+                              <X className="w-3.5 h-3.5" />
                             )}
                             Reject
                           </button>
-                        )}
+                        </>
+                      )}
 
-                        {/* View Button */}
-                        <button
-                          onClick={() => { setSelectedUser(u); setShowViewModal(true); }}
-                          className="px-2.5 py-1.5 text-slate-600 hover:text-blue-600 border border-slate-200 hover:border-blue-200 rounded-xl hover:bg-blue-50 transition cursor-pointer inline-flex items-center gap-1 font-bold text-xs"
-                          title="View Details"
-                        >
-                          <Eye className="w-3.5 h-3.5 text-blue-600" /> View
-                        </button>
+                      <button
+                        onClick={() => { setSelectedUser(u); setShowViewModal(true); }}
+                        className="flex-1 py-2 px-2 text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-50 transition cursor-pointer flex items-center justify-center gap-1 font-bold text-xs"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-blue-600" /> View
+                      </button>
 
-                        {/* Secure Edit Button */}
-                        <button
-                          onClick={() => {
-                            setSelectedUser(u);
-                            setOtpSent(false);
-                            setOtpVerified(false);
-                            setOtpCode('');
-                            setShowEditModal(true);
-                          }}
-                          className="px-2.5 py-1.5 text-slate-700 hover:text-red-600 border border-slate-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition cursor-pointer inline-flex items-center gap-1 font-bold text-xs"
-                          title="Secure Edit (OTP)"
-                        >
-                          <ShieldCheck className="w-3.5 h-3.5 text-red-600" /> Secure Edit
-                        </button>
+                      <button
+                        onClick={() => {
+                          setSelectedUser(u);
+                          setOtpSent(false);
+                          setOtpVerified(false);
+                          setOtpCode('');
+                          setShowEditModal(true);
+                        }}
+                        className="flex-1 py-2 px-2 text-slate-700 border border-slate-200 rounded-xl hover:bg-red-50 transition cursor-pointer flex items-center justify-center gap-1 font-bold text-xs"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5 text-red-600" /> Edit
+                      </button>
 
-                        {/* Delete Button */}
-                        <button
-                          onClick={() => setConfirmModal({ open: true, item: u })}
-                          className="px-2.5 py-1.5 text-slate-400 hover:text-red-600 border border-slate-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition cursor-pointer inline-flex items-center gap-1 font-bold text-xs"
-                          title="Delete User"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" /> Delete
-                        </button>
-                      </td>
-                    </motion.tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
+                      <button
+                        onClick={() => setConfirmModal({ open: true, item: u })}
+                        className="p-2 text-slate-400 hover:text-red-600 border border-slate-200 rounded-xl hover:bg-red-50 transition cursor-pointer"
+                        title="Delete User"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table View (hidden md:block) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full min-w-[850px] text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    <th className="py-4 px-6">User & Profile</th>
+                    <th className="py-4 px-6">Blood Group</th>
+                    <th className="py-4 px-6">Mobile Contact</th>
+                    <th className="py-4 px-6">User Role</th>
+                    <th className="py-4 px-6">District / City</th>
+                    <th className="py-4 px-6 text-center">Status</th>
+                    <th className="py-4 px-6 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs">
+                  {filtered.map((u) => {
+                    const displayName = u.primaryName || u.name || 'User';
+                    const pic = u.profilePicture || u.profile_picture;
+
+                    return (
+                      <motion.tr
+                        key={u._id || u.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="hover:bg-red-50/20 transition"
+                      >
+                        {/* Avatar & Name */}
+                        <td className="py-4 px-6 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={getStorageUrl(pic) || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName)}`}
+                              alt={displayName}
+                              onError={(e) => { e.target.onerror = null; e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName)}`; }}
+                              className="w-9 h-9 rounded-xl object-cover border border-slate-200 shadow-xs"
+                            />
+                            <div>
+                              <p className="text-slate-900 text-xs font-bold">{displayName}</p>
+                              <p className="text-slate-500 text-[11px] font-mono mt-0.5">{u.email}</p>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Creative Blood Group Pill */}
+                        <td className="py-4 px-6 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border border-red-200/80 shadow-2xs">
+                            <Droplet className="w-3.5 h-3.5 text-red-600 fill-red-600 animate-pulse" />
+                            {u.bloodGroup || u.blood_group || 'N/A'}
+                          </span>
+                        </td>
+
+                        {/* Phone */}
+                        <td className="py-4 px-6 whitespace-nowrap">
+                          <div className="flex items-center gap-1 text-slate-700 font-mono font-medium">
+                            <Phone className="w-3.5 h-3.5 text-slate-400" />
+                            <span>{u.mobile || u.phone || 'N/A'}</span>
+                          </div>
+                        </td>
+
+                        {/* Role */}
+                        <td className="py-4 px-6 whitespace-nowrap">
+                          <span className="inline-block px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-700 uppercase tracking-wider">
+                            {(u.role || 'donor').replace('_', ' ')}
+                          </span>
+                        </td>
+
+                        {/* Location */}
+                        <td className="py-4 px-6 whitespace-nowrap text-slate-600 font-medium">
+                          {u.city || u.district || 'N/A'}
+                        </td>
+
+                        {/* Status badge */}
+                        <td className="py-4 px-6 whitespace-nowrap text-center">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                            u.status === 'Active' || u.status === 'active'
+                              ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                              : u.status === 'Rejected' || u.status === 'rejected'
+                              ? 'bg-rose-50 border-rose-200 text-rose-700'
+                              : 'bg-amber-50 border-amber-200 text-amber-700'
+                          }`}>
+                            {u.status || 'Active'}
+                          </span>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="py-4 px-6 text-right space-x-1.5 whitespace-nowrap">
+                          {/* Approve Button (Only for Meghala Volunteer / Admin, NOT Unit Squad) */}
+                          {(currentUser?.role || '').toLowerCase() !== 'unit_squad' && (u.status !== 'Active' && u.status !== 'active') && (
+                            <button
+                              onClick={async () => {
+                                const userId = u._id || u.id;
+                                setApprovingUserId(userId);
+                                await volunteerApproveUser(userId);
+                                setApprovingUserId(null);
+                              }}
+                              disabled={approvingUserId === (u._id || u.id)}
+                              className="px-2.5 py-1.5 text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition cursor-pointer inline-flex items-center gap-1 font-bold text-xs shadow-2xs disabled:opacity-50"
+                              title="Approve User Registration"
+                            >
+                              {approvingUserId === (u._id || u.id) ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Check className="w-3.5 h-3.5" />
+                              )}
+                              Approve
+                            </button>
+                          )}
+
+                          {/* Reject Button (Only for Meghala Volunteer / Admin, NOT Unit Squad) */}
+                          {(currentUser?.role || '').toLowerCase() !== 'unit_squad' && (u.status !== 'Active' && u.status !== 'active' && u.status !== 'Rejected' && u.status !== 'rejected') && (
+                            <button
+                              onClick={async () => {
+                                const userId = u._id || u.id;
+                                setRejectingUserId(userId);
+                                await volunteerRejectUser(userId, 'Registration rejected by Meghala Committee.');
+                                setRejectingUserId(null);
+                              }}
+                              disabled={rejectingUserId === (u._id || u.id)}
+                              className="px-2.5 py-1.5 text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-300 rounded-xl transition cursor-pointer inline-flex items-center gap-1 font-bold text-xs shadow-2xs disabled:opacity-50"
+                              title="Reject User Registration"
+                            >
+                              {rejectingUserId === (u._id || u.id) ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-600" />
+                              ) : (
+                                <X className="w-3.5 h-3.5 text-rose-600" />
+                              )}
+                              Reject
+                            </button>
+                          )}
+
+                          {/* View Button */}
+                          <button
+                            onClick={() => { setSelectedUser(u); setShowViewModal(true); }}
+                            className="px-2.5 py-1.5 text-slate-600 hover:text-blue-600 border border-slate-200 hover:border-blue-200 rounded-xl hover:bg-blue-50 transition cursor-pointer inline-flex items-center gap-1 font-bold text-xs"
+                            title="View Details"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-blue-600" /> View
+                          </button>
+
+                          {/* Secure Edit Button */}
+                          <button
+                            onClick={() => {
+                              setSelectedUser(u);
+                              setOtpSent(false);
+                              setOtpVerified(false);
+                              setOtpCode('');
+                              setShowEditModal(true);
+                            }}
+                            className="px-2.5 py-1.5 text-slate-700 hover:text-red-600 border border-slate-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition cursor-pointer inline-flex items-center gap-1 font-bold text-xs"
+                            title="Secure Edit (OTP)"
+                          >
+                            <ShieldCheck className="w-3.5 h-3.5 text-red-600" /> Secure Edit
+                          </button>
+
+                          {/* Delete Button */}
+                          <button
+                            onClick={() => setConfirmModal({ open: true, item: u })}
+                            className="px-2.5 py-1.5 text-slate-400 hover:text-red-600 border border-slate-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition cursor-pointer inline-flex items-center gap-1 font-bold text-xs"
+                            title="Delete User"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> Delete
+                          </button>
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </div>
 
       {/* View Modal with Creative Blood Group Design */}
@@ -1242,10 +1404,10 @@ export default function UserManagement() {
                 </div>
               </div>
 
-              <div className="p-6 overflow-y-auto flex-1 scrollbar-thin">
+              <div className="p-4 sm:p-6 overflow-y-auto flex-1 scrollbar-thin">
                 <form onSubmit={handleAddSubmit} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="col-span-2 flex flex-col items-center pb-2 border-b border-slate-100">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="col-span-1 sm:col-span-2 flex flex-col items-center pb-2 border-b border-slate-100">
                       <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 text-center w-full">
                         Profile Picture *
                       </label>
@@ -1346,7 +1508,7 @@ export default function UserManagement() {
                     </div>
 
                     {/* Donor Email Field with Integrated OTP Verification */}
-                    <div className="col-span-2 bg-slate-50/90 border border-slate-200/90 p-4 rounded-2xl space-y-3">
+                    <div className="col-span-1 sm:col-span-2 bg-slate-50/90 border border-slate-200/90 p-3 sm:p-4 rounded-2xl space-y-3">
                       <div className="flex items-center justify-between">
                         <label className="block text-[10px] font-extrabold text-gray-600 uppercase tracking-wider">
                           Donor Email Address *
@@ -1466,7 +1628,7 @@ export default function UserManagement() {
                     </div>
 
                     {/* Place & Location Map Search Section */}
-                    <div className="col-span-2 bg-slate-50/90 border border-slate-200/90 p-4 rounded-2xl space-y-3">
+                    <div className="col-span-1 sm:col-span-2 bg-slate-50/90 border border-slate-200/90 p-3 sm:p-4 rounded-2xl space-y-3">
                       <div className="flex items-center justify-between gap-2 flex-wrap">
                         <label className="block text-[10px] font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
                           <MapPin className="w-3.5 h-3.5 text-red-600" /> Place / Map Search
@@ -1611,7 +1773,7 @@ export default function UserManagement() {
                       <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">PIN Code *</label>
                       <input type="text" value={form.pincode || ''} onChange={e => setForm({ ...form, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) })} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all font-mono font-semibold" maxLength={6} placeholder="6-digit pincode" required />
                     </div>
-                    <div className="col-span-2">
+                    <div className="col-span-1 sm:col-span-2">
                       <div className="flex items-center justify-between mb-1">
                         <label className="block text-[10px] font-bold text-gray-500 uppercase">District *</label>
                         <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">

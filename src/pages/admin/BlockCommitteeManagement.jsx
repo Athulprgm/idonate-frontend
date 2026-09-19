@@ -396,7 +396,7 @@ export default function BlockCommitteeManagement() {
     <div className="space-y-6 max-w-7xl mx-auto pb-16 select-none">
 
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border-slate-200 shadow-sm dark:bg-zinc-900 border /80 dark:border-zinc-800/80 p-6 rounded-3xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800/80 shadow-sm p-4 sm:p-6 rounded-3xl">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/40 rounded-full text-red-700 dark:text-red-400 text-xs font-bold uppercase tracking-wider mb-2">
             <Building2 className="w-4 h-4 text-red-600" /> {displayDistrict} Block Committees
@@ -513,7 +513,7 @@ export default function BlockCommitteeManagement() {
       </div>
 
       {/* Main List Section */}
-      <div className="bg-white border-slate-200 shadow-sm dark:bg-zinc-900 border /80 dark:border-zinc-800/80 rounded-3xl p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800/80 shadow-sm rounded-3xl p-4 sm:p-6 space-y-4 sm:space-y-6">
 
         {/* Filters & Search Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-100 dark:border-zinc-800/60 pb-4">
@@ -707,7 +707,7 @@ export default function BlockCommitteeManagement() {
 
               {/* Desktop Table View (>= md) */}
               <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 shadow-xs">
-                <table className="w-full text-left text-xs border-collapse">
+                <table className="w-full min-w-[850px] text-left text-xs border-collapse">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-zinc-950 border-b border-slate-200/80 dark:border-zinc-800/80 text-slate-500 dark:text-zinc-400 font-extrabold uppercase tracking-wider text-[11px]">
                       <th className="py-3.5 px-4">Block Committee</th>

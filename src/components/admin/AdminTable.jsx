@@ -121,7 +121,7 @@ export default function AdminTable({
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full min-w-[640px]">
           <thead>
             <tr className="border-b border-white/[0.06]">
               {selectable && (

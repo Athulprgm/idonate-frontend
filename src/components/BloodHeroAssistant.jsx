@@ -421,14 +421,14 @@ export default function BloodHeroAssistant() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-4 sm:bottom-6 right-2 sm:right-6 z-[9990] flex items-end select-none pointer-events-auto"
+            className="fixed bottom-[4.75rem] sm:bottom-6 right-2 sm:right-6 z-[9990] flex items-end select-none pointer-events-auto"
           >
             <motion.button
               type="button"
               onClick={() => setIsOpen(true)}
               whileTap={{ scale: 0.93 }}
               whileHover={{ scale: 1.05 }}
-              className="relative flex items-center justify-center p-0 bg-transparent border-0 outline-none cursor-pointer drop-shadow-2xl w-[145px] h-[145px] sm:w-[175px] sm:h-[175px] md:w-[200px] md:h-[200px] transition-all"
+              className="relative flex items-center justify-center p-0 bg-transparent border-0 outline-none cursor-pointer drop-shadow-2xl w-[82px] h-[82px] sm:w-[145px] sm:h-[145px] md:w-[190px] md:h-[190px] transition-all"
               aria-label="Open Hemo Blood Assistant"
             >
               <MascotVideo showBubble={true} />

@@ -566,7 +566,7 @@ export default function SuperAdminManagement() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full min-w-[800px] text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                   <tr>
                     <th className="py-4 px-6">JL Employee ID</th>

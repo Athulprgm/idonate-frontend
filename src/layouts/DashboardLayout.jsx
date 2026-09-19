@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore.js';
 import { useAppStore } from '../store/appStore.js';
 import Toast from '../components/Toast.jsx';
 import Sidebar from '../components/Sidebar.jsx';
+import BottomNav from '../components/BottomNav.jsx';
 import JeevaLinkLogo from '../components/JeevaLinkLogo.jsx';
 import GlobalNotificationPopup from '../components/GlobalNotificationPopup.jsx';
 import { Bell, Menu } from 'lucide-react';
@@ -21,8 +22,6 @@ export default function DashboardLayout() {
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
-
-
 
   // Intercept navigation for pending hospital
   useEffect(() => {
@@ -42,7 +41,7 @@ export default function DashboardLayout() {
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
 
         {/* Top bar */}
-        <header className="shrink-0 z-30 bg-white/95 backdrop-blur-xl border-b border-slate-100 h-14 flex items-center justify-between px-3 sm:px-4 lg:px-6 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+        <header className="shrink-0 z-30 bg-white/95 backdrop-blur-xl border-b border-slate-100 h-14 pt-[env(safe-area-inset-top)] flex items-center justify-between px-3 sm:px-4 lg:px-6 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
 
           {/* Mobile Menu & Logo */}
           <div className="flex items-center gap-1.5 sm:gap-2 lg:hidden min-w-0">
@@ -94,11 +93,14 @@ export default function DashboardLayout() {
           </div>
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 pb-6 min-h-0 w-full max-w-full overflow-x-hidden">
+        {/* Page content with bottom bar clearance on mobile */}
+        <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-6 min-h-0 w-full max-w-full overflow-x-hidden">
           <Outlet />
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <BottomNav onOpenMenu={() => setIsMobileMenuOpen(true)} />
 
       {/* Global Notification Prompt Modal */}
       <GlobalNotificationPopup />

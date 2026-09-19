@@ -194,7 +194,7 @@ export default function ReportsAnalytics() {
           </button>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[550px]">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50">
                 {['District', 'Volunteers', 'Total Requests', 'Completed', 'Success Rate'].map(h => (

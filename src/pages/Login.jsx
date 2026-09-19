@@ -167,7 +167,7 @@ export default function Login() {
       </div>
 
       {/* ── Brand Hero (Top on Mobile, Left on Desktop) ── */}
-      <div className="relative z-10 w-full lg:w-[45%] xl:w-[50%] flex flex-col justify-start lg:justify-center px-6 pt-16 pb-32 sm:pb-40 lg:p-20 text-white">
+      <div className="relative z-10 w-full lg:w-[45%] xl:w-[50%] flex flex-col justify-start lg:justify-center px-6 pt-10 pb-16 sm:pt-14 sm:pb-24 lg:p-20 text-white">
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -180,7 +180,7 @@ export default function Login() {
             <span
               style={{
                 fontFamily: "'Inter', system-ui, sans-serif",
-                fontSize: 'clamp(3rem, 10vw, 4.5rem)',
+                fontSize: 'clamp(2.5rem, 8vw, 4.5rem)',
                 fontWeight: 900,
                 letterSpacing: '-0.035em',
                 lineHeight: 1,
@@ -206,17 +206,17 @@ export default function Login() {
             </span>
           </div>
 
-          <p className="text-white/70 text-sm sm:text-base leading-relaxed font-medium mt-8 mb-10">
+          <p className="text-white/70 text-xs sm:text-base leading-relaxed font-medium mt-4 mb-6 sm:mt-8 sm:mb-10">
             Behind every login is a potential life saved. Access your portal to coordinate, connect, and continue the mission of compassion.
           </p>
 
-          <div className="grid grid-cols-2 gap-6 border-t border-white/15 pt-8">
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 border-t border-white/15 pt-5 sm:pt-8">
             <div>
-              <div className="text-3xl font-black text-white mb-1">{publicStats?.totalVolunteers || '-'}</div>
+              <div className="text-2xl sm:text-3xl font-black text-white mb-1">{publicStats?.totalVolunteers || '-'}</div>
               <div className="text-[10px] font-bold tracking-widest text-white/50 uppercase">Active Meghalas</div>
             </div>
             <div>
-              <div className="text-3xl font-black text-white mb-1">{publicStats?.totalRequests || '-'}</div>
+              <div className="text-2xl sm:text-3xl font-black text-white mb-1">{publicStats?.totalRequests || '-'}</div>
               <div className="text-[10px] font-bold tracking-widest text-white/50 uppercase">Blood Requests</div>
             </div>
           </div>
@@ -224,17 +224,17 @@ export default function Login() {
       </div>
 
       {/* ── Auth Form (Bottom Sheet on Mobile, Right Panel on Desktop) ── */}
-      <div className="relative z-20 w-full lg:w-[55%] xl:w-[50%] flex items-end lg:items-center justify-center -mt-20 lg:mt-0 lg:p-12 xl:p-16">
+      <div className="relative z-20 w-full lg:w-[55%] xl:w-[50%] flex items-end lg:items-center justify-center -mt-8 sm:-mt-14 lg:mt-0 lg:p-12 xl:p-16">
         <motion.div
           initial={{ y: 150, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: "spring", bounce: 0.2, duration: 1, delay: 0.3 }}
-          className="w-full max-w-[500px] bg-white rounded-t-[2.5rem] lg:rounded-[2.5rem] shadow-[0_-20px_50px_-15px_rgba(0,0,0,0.3)] lg:shadow-2xl px-6 sm:px-10 py-8 lg:p-12 pb-24 lg:pb-12"
+          className="w-full max-w-[500px] bg-white rounded-t-[2.5rem] lg:rounded-[2.5rem] shadow-[0_-20px_50px_-15px_rgba(0,0,0,0.3)] lg:shadow-2xl px-6 sm:px-10 py-6 sm:py-8 lg:p-12 pb-16 sm:pb-20 lg:pb-12"
         >
           {/* iOS-style drag handle indicator for mobile only */}
-          <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-8 lg:hidden"></div>
+          <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 sm:mb-8 lg:hidden"></div>
 
-          <div className="mb-10 text-center lg:text-left">
+          <div className="mb-6 sm:mb-10 text-center lg:text-left">
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mb-2 tracking-tight">
               Welcome Back
             </h2>

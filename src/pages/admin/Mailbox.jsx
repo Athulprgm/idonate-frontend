@@ -31,6 +31,7 @@ export default function Mailbox() {
   const [availableMailboxes, setAvailableMailboxes] = useState([]);
   const [quota, setQuota] = useState(null);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [mobileFolderOpen, setMobileFolderOpen] = useState(false);
 
   // Mailbox data state
   const [folders, setFolders] = useState([]);
@@ -400,26 +401,31 @@ export default function Mailbox() {
   // DIRECT ENTRY: AUTHENTIC GMAIL INTERFACE (MINIMAL & FAST)
   // ══════════════════════════════════════════════════════════════════════
   return (
-    <div className="h-[calc(100vh-5.5rem)] flex flex-col bg-[#f8fafd] dark:bg-[#1f1f1f] rounded-2xl overflow-hidden border border-[#dadce0] dark:border-[#444746] select-none text-[#1f1f1f] dark:text-white">
+    <div className="h-[calc(100vh-5.5rem)] flex flex-col bg-[#f8fafd] dark:bg-[#1f1f1f] rounded-xl sm:rounded-2xl overflow-hidden border border-[#dadce0] dark:border-[#444746] select-none text-[#1f1f1f] dark:text-white">
       {/* ── Top Gmail Header Bar ── */}
-      <header className="h-16 px-4 sm:px-6 flex items-center justify-between gap-4 shrink-0 bg-transparent">
+      <header className="h-14 sm:h-16 px-2.5 sm:px-6 flex items-center justify-between gap-2 sm:gap-4 shrink-0 bg-transparent">
         {/* Left: Brand / Logo */}
-        <div className="flex items-center gap-3 w-56 shrink-0">
-          <button className="p-2 rounded-full hover:bg-[#eaebef] dark:hover:bg-[#333537] text-[#5f6368] cursor-pointer">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          <button
+            onClick={() => setMobileFolderOpen(prev => !prev)}
+            className="p-1.5 sm:p-2 rounded-full hover:bg-[#eaebef] dark:hover:bg-[#333537] text-[#5f6368] cursor-pointer"
+            title="Toggle Folders"
+            aria-label="Toggle folders"
+          >
             <Menu className="w-5 h-5" />
           </button>
-          <div className="flex items-center gap-2.5">
-            <IDonateLogo className="w-8 h-8" />
-            <span className="text-lg font-bold text-[#b3261e] dark:text-[#ff897d] tracking-tight">
-              iDonate <span className="font-normal text-[#444746] dark:text-[#c4c7c5] text-base">Mail</span>
+          <div className="flex items-center gap-2">
+            <IDonateLogo className="w-7 h-7 sm:w-8 sm:h-8" />
+            <span className="text-base sm:text-lg font-bold text-[#b3261e] dark:text-[#ff897d] tracking-tight hidden xs:inline">
+              iDonate <span className="font-normal text-[#444746] dark:text-[#c4c7c5] text-sm sm:text-base">Mail</span>
             </span>
           </div>
         </div>
 
         {/* Center: Iconic Gmail Pill Search Bar */}
-        <div className="flex-1 max-w-2xl">
-          <div className="relative flex items-center bg-[#eaf1fb] dark:bg-[#282a2d] hover:bg-[#e1ebf8] dark:hover:bg-[#313337] focus-within:bg-white dark:focus-within:bg-[#1f1f1f] focus-within:shadow-md focus-within:border-transparent rounded-full px-4 py-2 transition-all border border-transparent">
-            <Search className="w-4 h-4 text-[#5f6368] dark:text-[#c4c7c5] shrink-0 mr-3" />
+        <div className="flex-1 max-w-xl mx-1 sm:mx-4">
+          <div className="relative flex items-center bg-[#eaf1fb] dark:bg-[#282a2d] hover:bg-[#e1ebf8] dark:hover:bg-[#313337] focus-within:bg-white dark:focus-within:bg-[#1f1f1f] focus-within:shadow-md focus-within:border-transparent rounded-full px-3 sm:px-4 py-1.5 sm:py-2 transition-all border border-transparent">
+            <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#5f6368] dark:text-[#c4c7c5] shrink-0 mr-2 sm:mr-3" />
             <input
               ref={searchInputRef}
               type="text"
@@ -427,7 +433,7 @@ export default function Mailbox() {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && fetchMessages(currentFolder, 1, searchQuery)}
               placeholder="Search in mail"
-              className="w-full bg-transparent text-sm text-[#1f1f1f] dark:text-white placeholder-[#5f6368] focus:outline-none"
+              className="w-full bg-transparent text-xs sm:text-sm text-[#1f1f1f] dark:text-white placeholder-[#5f6368] focus:outline-none"
             />
             {searchQuery && (
               <button
@@ -437,39 +443,39 @@ export default function Mailbox() {
                 }}
                 className="p-1 text-[#5f6368] hover:text-[#1f1f1f] cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
         </div>
 
         {/* Right: Quick Controls & User Profile */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
           <button
             onClick={() => {
               fetchFolders();
               fetchMessages(currentFolder, pagination.page);
             }}
             title="Refresh"
-            className="p-2.5 rounded-full text-[#5f6368] dark:text-[#c4c7c5] hover:bg-[#eaebef] dark:hover:bg-[#333537] cursor-pointer"
+            className="p-2 sm:p-2.5 rounded-full text-[#5f6368] dark:text-[#c4c7c5] hover:bg-[#eaebef] dark:hover:bg-[#333537] cursor-pointer"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoadingMessages ? 'animate-spin text-[#0b57d0]' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLoadingMessages ? 'animate-spin text-[#0b57d0]' : ''}`} />
           </button>
 
           {/* Account Profile Pill */}
           <div className="relative">
             <button
               onClick={() => setShowAccountMenu(!showAccountMenu)}
-              className="flex items-center gap-2 p-1.5 rounded-full hover:bg-[#eaebef] dark:hover:bg-[#333537] cursor-pointer"
+              className="flex items-center gap-2 p-1 sm:p-1.5 rounded-full hover:bg-[#eaebef] dark:hover:bg-[#333537] cursor-pointer"
             >
-              <div className="w-8 h-8 rounded-full bg-[#0b57d0] text-white flex items-center justify-center font-bold text-xs shadow-sm">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#0b57d0] text-white flex items-center justify-center font-bold text-xs shadow-sm">
                 {(activeMailbox?.emailAddress || 'C').charAt(0).toUpperCase()}
               </div>
             </button>
 
             {/* Account Menu Dropdown */}
             {showAccountMenu && (
-              <div className="absolute right-0 top-12 z-50 w-72 bg-white dark:bg-[#28292a] rounded-2xl border border-[#dadce0] dark:border-[#444746] shadow-xl p-4">
+              <div className="absolute right-0 top-11 sm:top-12 z-50 w-72 max-w-[88vw] bg-white dark:bg-[#28292a] rounded-2xl border border-[#dadce0] dark:border-[#444746] shadow-xl p-4">
                 <div className="flex items-center gap-3 pb-3 border-b border-[#e0e2ec] dark:border-[#444746]">
                   <div className="w-10 h-10 rounded-full bg-[#0b57d0] text-white flex items-center justify-center font-bold text-sm">
                     {(activeMailbox?.emailAddress || 'C').charAt(0).toUpperCase()}
@@ -509,10 +515,98 @@ export default function Mailbox() {
         </div>
       </header>
 
-      {/* ── Main Gmail Body: Left Sidebar + Mail Content Area ── */}
+      {/* ── Mobile Folder Drawer (Backdrop & Slide-out) ── */}
+      {mobileFolderOpen && (
+        <div
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden transition-opacity"
+          onClick={() => setMobileFolderOpen(false)}
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[82vw] bg-[#f8fafd] dark:bg-[#1f1f1f] p-4 flex flex-col justify-between shadow-2xl transition-transform duration-200 md:hidden ${
+          mobileFolderOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div>
+          <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#e0e2ec] dark:border-[#444746]">
+            <div className="flex items-center gap-2">
+              <IDonateLogo className="w-6 h-6" />
+              <span className="text-sm font-bold text-[#b3261e] dark:text-[#ff897d]">
+                iDonate Mail
+              </span>
+            </div>
+            <button
+              onClick={() => setMobileFolderOpen(false)}
+              className="p-1.5 rounded-full hover:bg-[#eaebef] dark:hover:bg-[#333537] text-[#5f6368]"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <button
+            onClick={() => {
+              setIsComposeOpen(true);
+              setIsComposeMinimized(false);
+              setMobileFolderOpen(false);
+            }}
+            className="w-full mb-4 py-3 px-4 rounded-2xl bg-[#c2e7ff] hover:bg-[#b0dcff] text-[#001d35] font-medium text-sm transition-all flex items-center justify-center gap-2.5 cursor-pointer shadow-xs"
+          >
+            <Edit3 className="w-4 h-4 text-[#001d35]" />
+            <span className="font-semibold">Compose</span>
+          </button>
+
+          <div className="space-y-1">
+            {folders.map(folder => {
+              const Icon = getFolderIcon(folder.path, folder.name);
+              const isActive = currentFolder === folder.path;
+              return (
+                <button
+                  key={folder.id || folder.path}
+                  onClick={() => {
+                    setCurrentFolder(folder.path);
+                    setSelectedUid(null);
+                    setMessageDetail(null);
+                    setMobileFolderOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-colors cursor-pointer ${
+                    isActive
+                      ? 'bg-[#d3e3fd] text-[#041e49] font-bold dark:bg-[#004a77] dark:text-[#c2e7ff]'
+                      : 'text-[#444746] dark:text-[#c4c7c5] hover:bg-[#eaebef] dark:hover:bg-[#333537]'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 truncate">
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-[#041e49] dark:text-[#c2e7ff]' : 'text-[#444746] dark:text-[#c4c7c5]'}`} />
+                    <span className="truncate">{folder.name}</span>
+                  </div>
+                  {folder.unreadMessages > 0 && (
+                    <span className={`text-xs font-bold ${isActive ? 'text-[#041e49] dark:text-[#c2e7ff]' : 'text-[#444746]'}`}>
+                      {folder.unreadMessages}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="pt-3 border-t border-[#e0e2ec] dark:border-[#444746] text-[11px] text-[#5f6368] dark:text-[#c4c7c5]">
+          <div className="w-full h-1 bg-[#e0e2ec] dark:bg-[#444746] rounded-full overflow-hidden mb-1.5">
+            <div
+              className="h-full bg-[#0b57d0] rounded-full"
+              style={{
+                width: `${Math.min(100, Math.max(2, ((quota?.storageUsed || 0) / (quota?.storageLimit || 10737418240)) * 100))}%`
+              }}
+            />
+          </div>
+          <p>{formatBytes(quota?.storageUsed)} of {formatBytes(quota?.storageLimit || 10737418240)} used</p>
+        </div>
+      </aside>
+
+      {/* ── Main Gmail Body: Desktop Sidebar + Mail Content Area ── */}
       <div className="flex-1 flex overflow-hidden min-h-0">
-        {/* ── Left Sidebar (Gmail Compose + Navigation) ── */}
-        <aside className="w-56 lg:w-60 p-3 flex flex-col justify-between shrink-0">
+        {/* ── Left Sidebar (Desktop Only) ── */}
+        <aside className="hidden md:flex w-52 lg:w-60 p-3 flex-col justify-between shrink-0">
           <div>
             {/* The Famous Gmail Compose Button */}
             <button
@@ -520,7 +614,7 @@ export default function Mailbox() {
                 setIsComposeOpen(true);
                 setIsComposeMinimized(false);
               }}
-              className="mb-4 py-3.5 px-5 rounded-2xl bg-[#c2e7ff] hover:bg-[#b0dcff] hover:shadow-md text-[#001d35] font-medium text-sm transition-all flex items-center gap-3 cursor-pointer shadow-xs"
+              className="mb-4 py-3 px-5 rounded-2xl bg-[#c2e7ff] hover:bg-[#b0dcff] hover:shadow-md text-[#001d35] font-medium text-sm transition-all flex items-center gap-3 cursor-pointer shadow-xs"
             >
               <Edit3 className="w-5 h-5 text-[#001d35]" />
               <span className="font-semibold">Compose</span>
@@ -539,7 +633,7 @@ export default function Mailbox() {
                       setSelectedUid(null);
                       setMessageDetail(null);
                     }}
-                    className={`w-full flex items-center justify-between px-4 py-2 rounded-r-full text-xs font-medium transition-colors cursor-pointer ${
+                    className={`w-full flex items-center justify-between px-3.5 py-2 rounded-r-full text-xs font-medium transition-colors cursor-pointer ${
                       isActive
                         ? 'bg-[#d3e3fd] text-[#041e49] font-bold dark:bg-[#004a77] dark:text-[#c2e7ff]'
                         : 'text-[#444746] dark:text-[#c4c7c5] hover:bg-[#eaebef] dark:hover:bg-[#333537]'
@@ -577,20 +671,21 @@ export default function Mailbox() {
         </aside>
 
         {/* ── Main Mail Canvas (White card inside Gmail frame) ── */}
-        <div className="flex-1 flex flex-col bg-white dark:bg-[#1f1f1f] rounded-2xl overflow-hidden mr-3 mb-3 border border-[#dadce0] dark:border-[#444746] shadow-xs">
+        <div className="flex-1 flex flex-col bg-white dark:bg-[#1f1f1f] rounded-none sm:rounded-2xl overflow-hidden sm:mr-3 sm:mb-3 border-t sm:border border-[#dadce0] dark:border-[#444746] shadow-xs">
           {/* ── Detail View OR List View ── */}
           {selectedUid ? (
             /* Reading Pane (Gmail conversation view) */
             <div className="flex-1 flex flex-col h-full min-h-0">
               {/* Detail Top Action Bar */}
-              <div className="h-12 px-4 border-b border-[#e0e2ec] dark:border-[#444746] flex items-center justify-between gap-3 shrink-0">
-                <div className="flex items-center gap-2">
+              <div className="h-12 px-3 sm:px-4 border-b border-[#e0e2ec] dark:border-[#444746] flex items-center justify-between gap-2 sm:gap-3 shrink-0">
+                <div className="flex items-center gap-1 sm:gap-2">
                   <button
                     onClick={() => setSelectedUid(null)}
-                    className="p-2 rounded-full hover:bg-[#eaebef] dark:hover:bg-[#333537] text-[#5f6368] cursor-pointer"
+                    className="p-1.5 sm:p-2 rounded-full bg-[#f2f6fc] sm:bg-transparent hover:bg-[#eaebef] dark:hover:bg-[#333537] text-[#1f1f1f] sm:text-[#5f6368] cursor-pointer flex items-center gap-1"
                     title="Back to inbox"
                   >
                     <ArrowLeft className="w-4 h-4" />
+                    <span className="sm:hidden text-xs font-semibold pr-1">Back</span>
                   </button>
                   <button
                     onClick={(e) => handleDeleteMessage(messageDetail?.uid, e)}
@@ -615,7 +710,7 @@ export default function Mailbox() {
                   </button>
                 </div>
 
-                <div className="text-xs text-[#5f6368]">
+                <div className="text-xs text-[#5f6368] shrink-0">
                   {messageDetail?.formattedDate || ''}
                 </div>
               </div>
@@ -627,9 +722,9 @@ export default function Mailbox() {
                   <p className="mt-2 text-xs text-[#5f6368]">Loading message...</p>
                 </div>
               ) : messageDetail ? (
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="flex-1 overflow-y-auto p-3.5 sm:p-6 space-y-4 sm:space-y-6">
                   {/* Subject Title */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <h2 className="text-xl font-normal text-[#1f1f1f] dark:text-white">
                       {messageDetail.subject || '(no subject)'}
                     </h2>
@@ -837,47 +932,102 @@ export default function Mailbox() {
                       <div
                         key={msg.uid}
                         onClick={() => fetchMessageDetail(msg.uid)}
-                        className={`h-11 px-4 flex items-center gap-3 text-xs transition-colors cursor-pointer group ${
+                        className={`min-h-[64px] sm:min-h-0 sm:h-11 px-3 sm:px-4 py-2.5 sm:py-0 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-3 text-xs transition-colors cursor-pointer group ${
                           !msg.isRead
                             ? 'bg-white dark:bg-[#1f1f1f] font-bold text-[#1f1f1f] dark:text-white'
                             : 'bg-[#f2f6fc]/50 dark:bg-[#28292a]/50 text-[#444746] dark:text-[#c4c7c5]'
                         } hover:shadow-xs hover:bg-[#eaebef]/70 dark:hover:bg-[#333537]`}
                       >
-                        {/* Checkbox */}
-                        <button
-                          type="button"
-                          onClick={(e) => toggleSelectUid(msg.uid, e)}
-                          className="p-1 text-[#5f6368] hover:text-[#1f1f1f] cursor-pointer"
-                        >
-                          {isChecked ? (
-                            <CheckSquare className="w-4 h-4 text-[#0b57d0]" />
-                          ) : (
-                            <Square className="w-4 h-4" />
-                          )}
-                        </button>
+                        {/* Mobile Layout (Visible only on < sm) */}
+                        <div className="flex sm:hidden items-center justify-between w-full gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <button
+                              type="button"
+                              onClick={(e) => toggleSelectUid(msg.uid, e)}
+                              className="p-1 text-[#5f6368] hover:text-[#1f1f1f] cursor-pointer shrink-0"
+                            >
+                              {isChecked ? (
+                                <CheckSquare className="w-4 h-4 text-[#0b57d0]" />
+                              ) : (
+                                <Square className="w-4 h-4" />
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => handleToggleStar(msg.uid, msg.isStarred, e)}
+                              className="p-1 cursor-pointer shrink-0"
+                            >
+                              <Star
+                                className={`w-4 h-4 ${
+                                  msg.isStarred
+                                    ? 'text-[#f4b400] fill-[#f4b400]'
+                                    : 'text-[#c4c7c5] hover:text-[#5f6368]'
+                                }`}
+                              />
+                            </button>
+                            <span className={`text-xs truncate ${!msg.isRead ? 'font-bold text-[#1f1f1f] dark:text-white' : 'font-medium text-[#444746]'}`}>
+                              {msg.from?.name || msg.from?.address}
+                            </span>
+                          </div>
 
-                        {/* Star */}
-                        <button
-                          type="button"
-                          onClick={(e) => handleToggleStar(msg.uid, msg.isStarred, e)}
-                          className="p-1 cursor-pointer"
-                        >
-                          <Star
-                            className={`w-4 h-4 ${
-                              msg.isStarred
-                                ? 'text-[#f4b400] fill-[#f4b400]'
-                                : 'text-[#c4c7c5] hover:text-[#5f6368]'
-                            }`}
-                          />
-                        </button>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {msg.hasAttachments && (
+                              <Paperclip className="w-3 h-3 text-[#5f6368]" />
+                            )}
+                            <span className={`text-[11px] ${!msg.isRead ? 'font-bold text-[#0b57d0]' : 'text-[#5f6368]'}`}>
+                              {msg.formattedDate}
+                            </span>
+                          </div>
+                        </div>
 
-                        {/* Sender */}
-                        <span className={`w-40 sm:w-48 truncate shrink-0 ${!msg.isRead ? 'font-bold text-[#1f1f1f] dark:text-white' : 'font-normal'}`}>
-                          {msg.from?.name || msg.from?.address}
-                        </span>
+                        {/* Mobile Subline (Subject & Snippet) */}
+                        <div className="flex sm:hidden items-center pl-7 min-w-0 w-full">
+                          <p className="text-xs truncate text-[#5f6368] dark:text-[#8e918f]">
+                            <span className={!msg.isRead ? 'font-semibold text-[#1f1f1f] dark:text-white mr-1' : 'font-normal text-[#444746] mr-1'}>
+                              {msg.subject || '(no subject)'}
+                            </span>
+                            <span>— {msg.text ? msg.text.substring(0, 75) : ''}</span>
+                          </p>
+                        </div>
 
-                        {/* Subject - Snippet (True Gmail layout) */}
-                        <div className="flex-1 truncate flex items-center gap-1.5 min-w-0">
+                        {/* Desktop Layout Elements (Visible on >= sm) */}
+                        <div className="hidden sm:flex items-center gap-3 shrink-0">
+                          {/* Checkbox */}
+                          <button
+                            type="button"
+                            onClick={(e) => toggleSelectUid(msg.uid, e)}
+                            className="p-1 text-[#5f6368] hover:text-[#1f1f1f] cursor-pointer"
+                          >
+                            {isChecked ? (
+                              <CheckSquare className="w-4 h-4 text-[#0b57d0]" />
+                            ) : (
+                              <Square className="w-4 h-4" />
+                            )}
+                          </button>
+
+                          {/* Star */}
+                          <button
+                            type="button"
+                            onClick={(e) => handleToggleStar(msg.uid, msg.isStarred, e)}
+                            className="p-1 cursor-pointer"
+                          >
+                            <Star
+                              className={`w-4 h-4 ${
+                                msg.isStarred
+                                  ? 'text-[#f4b400] fill-[#f4b400]'
+                                  : 'text-[#c4c7c5] hover:text-[#5f6368]'
+                              }`}
+                            />
+                          </button>
+
+                          {/* Sender */}
+                          <span className={`w-40 md:w-48 truncate shrink-0 ${!msg.isRead ? 'font-bold text-[#1f1f1f] dark:text-white' : 'font-normal'}`}>
+                            {msg.from?.name || msg.from?.address}
+                          </span>
+                        </div>
+
+                        {/* Desktop Subject - Snippet */}
+                        <div className="hidden sm:flex flex-1 truncate items-center gap-1.5 min-w-0">
                           <span className={`truncate ${!msg.isRead ? 'font-bold text-[#1f1f1f] dark:text-white' : 'font-normal'}`}>
                             {msg.subject || '(no subject)'}
                           </span>
@@ -886,26 +1036,26 @@ export default function Mailbox() {
                           </span>
                         </div>
 
-                        {/* Paperclip if attachments */}
-                        {msg.hasAttachments && (
-                          <Paperclip className="w-3.5 h-3.5 text-[#5f6368] shrink-0" />
-                        )}
+                        {/* Desktop Right Side: Attachments, Date & Quick Delete */}
+                        <div className="hidden sm:flex items-center gap-3 shrink-0">
+                          {msg.hasAttachments && (
+                            <Paperclip className="w-3.5 h-3.5 text-[#5f6368] shrink-0" />
+                          )}
 
-                        {/* Date on Right */}
-                        <span className={`text-[11px] shrink-0 font-medium ${!msg.isRead ? 'font-bold text-[#1f1f1f] dark:text-white' : 'text-[#5f6368]'}`}>
-                          {msg.formattedDate}
-                        </span>
+                          <span className={`text-[11px] shrink-0 font-medium ${!msg.isRead ? 'font-bold text-[#1f1f1f] dark:text-white' : 'text-[#5f6368]'}`}>
+                            {msg.formattedDate}
+                          </span>
 
-                        {/* Quick hover action: Delete */}
-                        <div className="hidden group-hover:flex items-center gap-1 shrink-0 ml-2">
-                          <button
-                            type="button"
-                            onClick={(e) => handleDeleteMessage(msg.uid, e)}
-                            className="p-1 rounded-full hover:bg-slate-200 text-[#5f6368] hover:text-[#b3261e] cursor-pointer"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="hidden group-hover:flex items-center gap-1 shrink-0 ml-1">
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteMessage(msg.uid, e)}
+                              className="p-1 rounded-full hover:bg-slate-200 text-[#5f6368] hover:text-[#b3261e] cursor-pointer"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
@@ -923,15 +1073,15 @@ export default function Mailbox() {
       <AnimatePresence>
         {isComposeOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className={`fixed z-50 bg-white dark:bg-[#28292a] border border-[#dadce0] dark:border-[#444746] rounded-t-xl shadow-2xl overflow-hidden flex flex-col ${
+            exit={{ opacity: 0, y: 30 }}
+            className={`fixed z-50 bg-white dark:bg-[#28292a] border border-[#dadce0] dark:border-[#444746] rounded-t-2xl sm:rounded-t-xl shadow-2xl overflow-hidden flex flex-col ${
               isComposeMaximized
-                ? 'inset-6 sm:inset-10 rounded-xl'
+                ? 'inset-2 sm:inset-10 rounded-xl'
                 : isComposeMinimized
-                ? 'bottom-0 right-10 w-72 h-10'
-                : 'bottom-0 right-10 w-[90vw] sm:w-[540px] h-[520px]'
+                ? 'bottom-0 inset-x-4 sm:inset-x-auto sm:right-10 sm:w-72 h-10'
+                : 'bottom-0 inset-x-0 sm:inset-x-auto sm:right-10 w-full sm:w-[540px] max-h-[92vh] sm:max-h-[85vh] h-[520px]'
             }`}
           >
             {/* Dark Top Title Bar in authentic Gmail style */}

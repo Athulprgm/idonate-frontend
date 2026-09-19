@@ -119,12 +119,22 @@ export default function Mailbox() {
     }
   }, [currentFolder, searchQuery, triggerToast]);
 
-  // Initial load
+  // Initial load: runs once on mount
   useEffect(() => {
     checkConnectionStatus();
     fetchFolders();
+    fetchMessages('INBOX', 1);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Folder switch effect
+  const isMountedRef = useRef(false);
+  useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      return;
+    }
     fetchMessages(currentFolder, 1);
-  }, [checkConnectionStatus, fetchFolders, fetchMessages, currentFolder]);
+  }, [currentFolder]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 4. Fetch Message Detail
   const fetchMessageDetail = async (uid) => {

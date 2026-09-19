@@ -362,6 +362,7 @@ export default function BlockCommitteeManagement() {
   const totalBlocks = totals.blocks || blocks.length;
   const totalBlockDonors = totals.donors || 0;
   const totalBlockVolunteers = totals.volunteers || 0;
+  const totalMeghalas = totals.meghalas ?? blocks.reduce((acc, b) => acc + (b.meghalaCount ?? b.meghala_count ?? b.meghalas?.length ?? 0), 0);
   const activeCount = totals.active || 0;
   const unassignedCount = totals.unassigned || 0;
   const suspendedCount = totals.suspended || 0;
@@ -485,7 +486,7 @@ export default function BlockCommitteeManagement() {
               <Users className="w-4 h-4" />
             </div>
           </div>
-          <h3 className="text-xl sm:text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1">{totalBlockVolunteers}</h3>
+          <h3 className="text-xl sm:text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1">{totalMeghalas}</h3>
           <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-0.5 truncate">Across {totalBlocks} Blocks</p>
         </div>
 

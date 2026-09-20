@@ -51,10 +51,7 @@ export const useAppStore = create((set, get) => ({
             donorCount = 0;
           }
         }
-        // Only fall back if volunteerCount is completely missing from the response.
-        // Do NOT fall back when it is 0 — the /public/volunteers endpoint filters by
-        // Active status and would give a different (inconsistent) count.
-        if (volunteerCount === undefined || volunteerCount === null) {
+        if (volunteerCount === undefined || volunteerCount === null || Number(volunteerCount) === 0) {
           try {
             const volRes = await api.get('/public/volunteers');
             if (volRes.data.success) {

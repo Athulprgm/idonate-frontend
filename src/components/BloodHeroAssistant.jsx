@@ -421,7 +421,7 @@ export default function BloodHeroAssistant() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-[4.75rem] sm:bottom-6 right-2 sm:right-6 z-[9990] flex items-end select-none pointer-events-auto"
+            className="fixed bottom-0 right-0 z-[9990] flex items-end select-none pointer-events-auto"
           >
             <motion.button
               type="button"

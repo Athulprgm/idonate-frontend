@@ -75,14 +75,32 @@ export default function VolunteerDirectory() {
   const availableMeghalas = useMemo(() => {
     if (!selectedBlock) return ['All Meghalas'];
     const direct = dbMeghalasByBlock[selectedBlock];
-    if (direct && Array.isArray(direct) && direct.length > 0) {
-      return ['All Meghalas', ...direct];
+    let rawList = (direct && Array.isArray(direct) && direct.length > 0) ? direct : null;
+    
+    if (!rawList) {
+      const matchingKey = Object.keys(dbMeghalasByBlock).find(
+        k => k.toLowerCase().trim() === selectedBlock.toLowerCase().trim()
+      );
+      rawList = (matchingKey && dbMeghalasByBlock[matchingKey]) || [];
     }
-    const matchingKey = Object.keys(dbMeghalasByBlock).find(
-      k => k.toLowerCase().trim() === selectedBlock.toLowerCase().trim()
-    );
-    const dbMeghalas = (matchingKey && dbMeghalasByBlock[matchingKey]) || [];
-    return ['All Meghalas', ...dbMeghalas];
+
+    const stringList = (rawList || [])
+      .map(m => typeof m === 'string' ? m : (m.name || m.meghala || m.meghala_name || ''))
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    // Deduplicate case-insensitively while preserving formatting
+    const seen = new Set();
+    const uniqueList = [];
+    for (const item of stringList) {
+      const lower = item.toLowerCase();
+      if (!seen.has(lower)) {
+        seen.add(lower);
+        uniqueList.push(item);
+      }
+    }
+
+    return ['All Meghalas', ...uniqueList];
   }, [selectedBlock, dbMeghalasByBlock]);
 
   // Handle Block change

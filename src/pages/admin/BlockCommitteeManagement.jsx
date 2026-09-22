@@ -755,8 +755,8 @@ export default function BlockCommitteeManagement() {
                               </span>
                             </div>
                             {meghalaList.length > 0 && (
-                              <div className="text-[10px] text-slate-400 max-w-[180px] truncate mt-0.5" title={meghalaList.join(', ')}>
-                                {meghalaList.slice(0, 3).join(', ')}{meghalaList.length > 3 ? ` +${meghalaList.length - 3}` : ''}
+                              <div className="text-[10px] text-slate-400 max-w-[180px] truncate mt-0.5" title={meghalaList.map(m => typeof m === 'string' ? m : (m.name || m.meghala || m.meghala_name || '')).filter(Boolean).join(', ')}>
+                                {meghalaList.slice(0, 3).map(m => typeof m === 'string' ? m : (m.name || m.meghala || m.meghala_name || '')).filter(Boolean).join(', ')}{meghalaList.length > 3 ? ` +${meghalaList.length - 3}` : ''}
                               </div>
                             )}
                           </td>

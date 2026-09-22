@@ -67,6 +67,7 @@ export default function BlockCommitteeManagement() {
   const [editingAdmin, setEditingAdmin] = useState(null);
   const [deletingAdminId, setDeletingAdminId] = useState(null);
   const [deletingAdminName, setDeletingAdminName] = useState('');
+  const [deletingBlockName, setDeletingBlockName] = useState('');
   const [credentialsModal, setCredentialsModal] = useState({ open: false, email: '', password: '', blockName: '' });
 
   // Deactivation and Reactivation Modals
@@ -326,12 +327,16 @@ export default function BlockCommitteeManagement() {
   const handleConfirmDelete = async () => {
     if (!deletingAdminId) return;
     try {
-      const res = await api.delete(`/super-admin/block-admins/${deletingAdminId}`);
+      const res = await api.delete(`/super-admin/block-admins/${deletingAdminId}`, {
+        params: { block_name: deletingBlockName || deletingAdminName }
+      });
       if (res.data?.success) loadData();
     } catch (err) {
-      console.error('Failed to delete block admin', err);
+      console.error('Failed to delete block committee', err);
     } finally {
       setDeletingAdminId(null);
+      setDeletingAdminName('');
+      setDeletingBlockName('');
     }
   };
 
@@ -682,6 +687,7 @@ export default function BlockCommitteeManagement() {
                                 const targetName = c.rawAdmin?.primary_name || c.rawAdmin?.name || c.admin1Name || bName;
                                 setDeletingAdminId(targetId);
                                 setDeletingAdminName(targetName);
+                                setDeletingBlockName(bName);
                               }}
                               className="p-1.5 text-xs font-bold text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/40 rounded-xl flex items-center justify-center cursor-pointer"
                               title="Delete"
@@ -690,15 +696,29 @@ export default function BlockCommitteeManagement() {
                             </button>
                           </>
                         ) : (
-                          <button
-                            onClick={() => {
-                              setBlockName(bName);
-                              setShowAddModal(true);
-                            }}
-                            className="w-full py-2 text-xs font-bold text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/40 rounded-xl flex items-center justify-center gap-1 cursor-pointer"
-                          >
-                            <Plus className="w-3.5 h-3.5" /> Assign Admin
-                          </button>
+                          <div className="flex items-center gap-1.5 w-full">
+                            <button
+                              onClick={() => {
+                                setBlockName(bName);
+                                setShowAddModal(true);
+                              }}
+                              className="flex-1 py-2 text-xs font-bold text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/40 rounded-xl flex items-center justify-center gap-1 cursor-pointer"
+                            >
+                              <Plus className="w-3.5 h-3.5" /> Assign Admin
+                            </button>
+                            <button
+                              onClick={() => {
+                                const targetId = c.rawAdmin?.id || c.id;
+                                setDeletingAdminId(targetId);
+                                setDeletingAdminName(bName);
+                                setDeletingBlockName(bName);
+                              }}
+                              className="p-2 text-xs font-bold text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/40 rounded-xl flex items-center justify-center cursor-pointer"
+                              title="Delete Block Committee"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -867,6 +887,7 @@ export default function BlockCommitteeManagement() {
                                     const targetName = c.rawAdmin?.primary_name || c.rawAdmin?.name || c.admin1Name || bName;
                                     setDeletingAdminId(targetId);
                                     setDeletingAdminName(targetName);
+                                    setDeletingBlockName(bName);
                                   }}
                                   className="px-2.5 py-1.5 text-xs font-bold text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/40 hover:bg-red-100 dark:hover:bg-red-900/60 rounded-xl transition cursor-pointer flex items-center gap-1"
                                   title="Delete Block Committee"
@@ -875,16 +896,30 @@ export default function BlockCommitteeManagement() {
                                 </button>
                               </div>
                             ) : (
-                              <button
-                                onClick={() => {
-                                  setBlockName(bName);
-                                  setShowAddModal(true);
-                                }}
-                                className="px-3 py-1.5 text-xs font-bold text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/40 hover:bg-red-100 dark:hover:bg-red-900/60 rounded-xl transition cursor-pointer flex items-center gap-1 ml-auto"
-                                title="Assign Admin to this Block"
-                              >
-                                <Plus className="w-3.5 h-3.5" /> Assign Admin
-                              </button>
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => {
+                                    setBlockName(bName);
+                                    setShowAddModal(true);
+                                  }}
+                                  className="px-3 py-1.5 text-xs font-bold text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/40 hover:bg-red-100 dark:hover:bg-red-900/60 rounded-xl transition cursor-pointer flex items-center gap-1"
+                                  title="Assign Admin to this Block"
+                                >
+                                  <Plus className="w-3.5 h-3.5" /> Assign Admin
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const targetId = c.rawAdmin?.id || c.id;
+                                    setDeletingAdminId(targetId);
+                                    setDeletingAdminName(bName);
+                                    setDeletingBlockName(bName);
+                                  }}
+                                  className="px-2.5 py-1.5 text-xs font-bold text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/40 hover:bg-red-100 dark:hover:bg-red-900/60 rounded-xl transition cursor-pointer flex items-center gap-1"
+                                  title="Delete Block Committee"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" /> Delete
+                                </button>
+                              </div>
                             )}
                           </td>
                         </tr>
@@ -1024,6 +1059,7 @@ export default function BlockCommitteeManagement() {
                                 const targetName = c.rawAdmin?.primary_name || c.rawAdmin?.name || c.admin1Name || bName;
                                 setDeletingAdminId(targetId);
                                 setDeletingAdminName(targetName);
+                                setDeletingBlockName(bName);
                               }}
                               className="px-2.5 py-1.5 text-[11px] font-bold text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/40 hover:bg-red-100 dark:hover:bg-red-900/60 rounded-xl transition flex items-center gap-1 cursor-pointer"
                             >
@@ -1031,16 +1067,31 @@ export default function BlockCommitteeManagement() {
                             </button>
                           </>
                         ) : (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setBlockName(bName);
-                              setShowAddModal(true);
-                            }}
-                            className="px-2.5 py-1.5 text-[11px] font-bold text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/40 hover:bg-red-100 dark:hover:bg-red-900/60 rounded-xl transition flex items-center gap-1 cursor-pointer"
-                          >
-                            <Plus className="w-3 h-3" /> Assign Admin
-                          </button>
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setBlockName(bName);
+                                setShowAddModal(true);
+                              }}
+                              className="px-2.5 py-1.5 text-[11px] font-bold text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/40 hover:bg-red-100 dark:hover:bg-red-900/60 rounded-xl transition flex items-center gap-1 cursor-pointer"
+                            >
+                              <Plus className="w-3 h-3" /> Assign Admin
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const targetId = c.rawAdmin?.id || c.id;
+                                setDeletingAdminId(targetId);
+                                setDeletingAdminName(bName);
+                                setDeletingBlockName(bName);
+                              }}
+                              className="px-2.5 py-1.5 text-[11px] font-bold text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/40 hover:bg-red-100 dark:hover:bg-red-900/60 rounded-xl transition flex items-center gap-1 cursor-pointer"
+                              title="Delete Block Committee"
+                            >
+                              <Trash2 className="w-3 h-3" /> Delete
+                            </button>
+                          </>
                         )}
                       </div>
                     </button>
@@ -1598,10 +1649,17 @@ export default function BlockCommitteeManagement() {
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
         isOpen={!!deletingAdminId}
-        onClose={() => setDeletingAdminId(null)}
+        onClose={() => {
+          setDeletingAdminId(null);
+          setDeletingAdminName('');
+          setDeletingBlockName('');
+        }}
         onConfirm={handleConfirmDelete}
-        title={`Delete Block Admin (${deletingAdminName})?`}
-        message="Are you sure you want to delete this Block Committee Admin? They will lose access to district management."
+        title={`Delete Block Committee (${deletingBlockName || deletingAdminName})?`}
+        message={deletingBlockName && deletingAdminName === deletingBlockName
+          ? `Are you sure you want to delete "${deletingBlockName}" block committee? Any volunteers or donors associated with this block will be unassigned.`
+          : `Are you sure you want to delete this Block Committee Admin? They will lose access to district management.`
+        }
       />
 
     </div>
